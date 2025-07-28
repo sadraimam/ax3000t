@@ -31,8 +31,6 @@ uci commit system
 uci commit network
 /sbin/reload_config
 
-opkg update
-
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
 opkg-key add /tmp/passwall.pub
