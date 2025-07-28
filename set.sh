@@ -182,6 +182,7 @@ HASH=$(openssl passwd -1 "123456789")
 sed -i "/^root:/s|:[^:]*:|:${HASH}:|" /etc/shadow
 openssl passwd -1 "123456789" | awk -v hash="$(cat)" '{ system("sed -i \"/^root:/s|:[^:]*:|:" hash ":|\" /etc/shadow") }'
 opkg remove openssl-util
+echo -e "${YELLOW}** root password set ** ${NC}"
 
 # Set Wifi
 uci set wireless.radio0.cell_density='0'
@@ -198,6 +199,7 @@ uci set wireless.radio0.disabled='0'
 uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
+echo -e "${YELLOW}** Wifi set ** ${NC}"
 
 sleep 2
 
