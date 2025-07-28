@@ -200,7 +200,3 @@ uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
 echo -e "${YELLOW}** Wifi set ** ${NC}"
-
-sleep 2
-
-reboot
