@@ -116,7 +116,6 @@ install_tmp unzip
 install_tmp luci-app-passwall2
 install_tmp kmod-nft-socket
 install_tmp kmod-nft-tproxy
-install_tmp ca-bundle
 install_tmp kmod-inet-diag
 install_tmp kmod-netlink-diag
 install_tmp kmod-tun
