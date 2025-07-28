@@ -50,6 +50,13 @@ opkg update
 
 install_tmp() {
   pkg="$1"
+  
+  # Check if package is already installed
+  if opkg list-installed | grep -q "^$pkg - "; then
+    echo -e "${GREEN}$pkg is already installed. Skipping.${NC}"
+    return 0
+  fi
+
   echo -e "${YELLOW}Installing $pkg ...${NC}"
   cd /tmp || return 1
   rm -f ${pkg}_*.ipk  # Clean up any previous downloads
@@ -83,7 +90,12 @@ install_tmp() {
   # Cleanup regardless of installation status
   rm -f ${pkg}_*.ipk
   
-  [ $install_status -ne 0 ] && echo -e "${RED}Installation failed for $pkg${NC}"
+  if [ $install_status -ne 0 ]; then
+    echo -e "${RED}Installation failed for $pkg${NC}"
+  else
+    echo -e "${GREEN}Successfully installed $pkg${NC}"
+  fi
+  
   sleep 2
   return $install_status
 }
