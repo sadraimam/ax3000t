@@ -13,10 +13,9 @@ sleep 2
 clear
 
 SNNAP=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
-
 if [ "$SNNAP" == "SNAPSHOT" ]; then
     echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
-    rm -f passwalls.sh && wget https://raw.githubusercontent.com/sadraimam/passwall/main/passwalls.sh && chmod 777 passwalls.sh && sh passwalls.sh
+    echo -e "${RED} Snapshot not Supported. ! ${NC}"
     exit 1
 else           
     echo -e "${GREEN} Updating Packages ... ${NC}"
