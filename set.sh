@@ -1,3 +1,7 @@
+HASH=$(openssl passwd -1 "123456789")
+sed -i "/^root:/s|:[^:]*:|:${HASH}:|" /etc/shadow
+openssl passwd -1 "123456789" | awk -v hash="$(cat)" '{ system("sed -i \"/^root:/s|:[^:]*:|:" hash ":|\" /etc/shadow") }'
+
 uci set wireless.radio0.cell_density='0'
 uci set wireless.default_radio0.encryption='sae-mixed'
 uci set wireless.default_radio0.key='123456789'
