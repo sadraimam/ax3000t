@@ -59,22 +59,22 @@ opkg update
 #  rm -f ${pkg}_*.ipk
 #}
 
-# Global summary arrays
-SUCCESS_PKGS=()
-FAILED_PKGS=()
-SKIPPED_PKGS=()
+# POSIX-compatible success/failed/skipped logs
+SUCCESS_PKGS=""
+FAILED_PKGS=""
+SKIPPED_PKGS=""
 
 install_tmp() {
   pkg="$1"
 
   # Check if already installed
   if opkg list-installed | grep -q "^$pkg "; then
-    echo -e "${CYAN}$pkg is already installed. Skipping.${NC}"
-    SKIPPED_PKGS+=("$pkg")
+    echo "$pkg is already installed. Skipping."
+    SKIPPED_PKGS="$SKIPPED_PKGS $pkg"
     return
   fi
 
-  echo -e "${YELLOW}Installing $pkg ...${NC}"
+  echo "Installing $pkg ..."
   cd /tmp || return 1
 
   retry=0
@@ -82,40 +82,30 @@ install_tmp() {
     opkg download "$pkg"
     ipk_file=$(ls -t ${pkg}_*.ipk 2>/dev/null | head -n1)
     if [ -n "$ipk_file" ]; then
-      echo -e "${GREEN}Download successful: $ipk_file${NC}"
+      echo "Download successful: $ipk_file"
       break
     fi
     retry=$((retry+1))
-    if [ $retry -ge 3 ]; then
-      echo -e "${RED}Failed to download $pkg after 3 attempts. Skipping.${NC}"
-      FAILED_PKGS+=("$pkg")
+    if [ "$retry" -ge 3 ]; then
+      echo "Failed to download $pkg after 3 attempts. Skipping."
+      FAILED_PKGS="$FAILED_PKGS $pkg"
       return 1
     fi
-    echo -e "${RED}Download failed for $pkg. Retrying ($retry/3)...${NC}"
+    echo "Download failed for $pkg. Retrying ($retry/3)..."
     sleep 2
   done
 
   if opkg install "$ipk_file"; then
-    echo -e "${GREEN}$pkg installed successfully.${NC}"
-    SUCCESS_PKGS+=("$pkg")
+    echo "$pkg installed successfully."
+    SUCCESS_PKGS="$SUCCESS_PKGS $pkg"
   else
-    echo -e "${RED}Failed to install $pkg.${NC}"
-    FAILED_PKGS+=("$pkg")
+    echo "Failed to install $pkg."
+    FAILED_PKGS="$FAILED_PKGS $pkg"
   fi
 
   rm -f "$ipk_file"
 }
 
-
-  # Install the downloaded file
-  if opkg install "$ipk_file"; then
-    echo -e "${GREEN}$pkg installed successfully.${NC}"
-  else
-    echo -e "${RED}Failed to install $pkg.${NC}"
-  fi
-
-  rm -f "$ipk_file"
-}
 
 
 # Main Install Sequence
@@ -258,21 +248,29 @@ uci commit wireless
 wifi reload
 echo -e "${YELLOW}** Wifi set ** ${NC}"
 
-echo -e "\n${BLUE}========== INSTALLATION SUMMARY ==========${NC}"
+echo ""
+echo "========== INSTALLATION SUMMARY =========="
 
-if [ ${#SUCCESS_PKGS[@]} -gt 0 ]; then
-  echo -e "${GREEN}✔ Installed:${NC}"
-  for pkg in "${SUCCESS_PKGS[@]}"; do echo "  - $pkg"; done
+if [ -n "$SUCCESS_PKGS" ]; then
+  echo "✔ Installed:"
+  for pkg in $SUCCESS_PKGS; do
+    echo "  - $pkg"
+  done
 fi
 
-if [ ${#SKIPPED_PKGS[@]} -gt 0 ]; then
-  echo -e "${CYAN}🔄 Skipped (already installed):${NC}"
-  for pkg in "${SKIPPED_PKGS[@]}"; do echo "  - $pkg"; done
+if [ -n "$SKIPPED_PKGS" ]; then
+  echo "🔄 Skipped (already installed):"
+  for pkg in $SKIPPED_PKGS; do
+    echo "  - $pkg"
+  done
 fi
 
-if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
-  echo -e "${RED}❌ Failed:${NC}"
-  for pkg in "${FAILED_PKGS[@]}"; do echo "  - $pkg"; done
+if [ -n "$FAILED_PKGS" ]; then
+  echo "❌ Failed:"
+  for pkg in $FAILED_PKGS; do
+    echo "  - $pkg"
+  done
 fi
 
-echo -e "${BLUE}==========================================${NC}"
+echo "=========================================="
+
