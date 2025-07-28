@@ -21,6 +21,7 @@ else
     echo -e "${GREEN} Updating Packages ... ${NC}"
 fi
 
+# Add Passwall Feeds
 uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
 uci set network.wan.peerdns="0"
@@ -46,6 +47,7 @@ done
 
 opkg update
 
+# Function to install from tmp
 install_tmp() {
   pkg="$1"
   
@@ -97,16 +99,6 @@ install_tmp() {
   sleep 2
   return $install_status
 }
-
-# Function to install from tmp
-#install_tmp() {
-#  pkg="$1"
-#  echo -e "${YELLOW}Installing $pkg ...${NC}"
-#  cd /tmp
-#  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
-#  sleep 2
-#  rm -f ${pkg}_*.ipk
-#}
 
 # Main Install Sequence
 opkg remove dnsmasq
