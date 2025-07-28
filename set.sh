@@ -59,12 +59,18 @@ opkg update
 #  rm -f ${pkg}_*.ipk
 #}
 
+# Global summary arrays
+SUCCESS_PKGS=()
+FAILED_PKGS=()
+SKIPPED_PKGS=()
+
 install_tmp() {
   pkg="$1"
 
   # Check if already installed
   if opkg list-installed | grep -q "^$pkg "; then
     echo -e "${CYAN}$pkg is already installed. Skipping.${NC}"
+    SKIPPED_PKGS+=("$pkg")
     return
   fi
 
@@ -82,11 +88,24 @@ install_tmp() {
     retry=$((retry+1))
     if [ $retry -ge 3 ]; then
       echo -e "${RED}Failed to download $pkg after 3 attempts. Skipping.${NC}"
+      FAILED_PKGS+=("$pkg")
       return 1
     fi
     echo -e "${RED}Download failed for $pkg. Retrying ($retry/3)...${NC}"
     sleep 2
   done
+
+  if opkg install "$ipk_file"; then
+    echo -e "${GREEN}$pkg installed successfully.${NC}"
+    SUCCESS_PKGS+=("$pkg")
+  else
+    echo -e "${RED}Failed to install $pkg.${NC}"
+    FAILED_PKGS+=("$pkg")
+  fi
+
+  rm -f "$ipk_file"
+}
+
 
   # Install the downloaded file
   if opkg install "$ipk_file"; then
@@ -238,3 +257,22 @@ uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
 echo -e "${YELLOW}** Wifi set ** ${NC}"
+
+echo -e "\n${BLUE}========== INSTALLATION SUMMARY ==========${NC}"
+
+if [ ${#SUCCESS_PKGS[@]} -gt 0 ]; then
+  echo -e "${GREEN}✔ Installed:${NC}"
+  for pkg in "${SUCCESS_PKGS[@]}"; do echo "  - $pkg"; done
+fi
+
+if [ ${#SKIPPED_PKGS[@]} -gt 0 ]; then
+  echo -e "${CYAN}🔄 Skipped (already installed):${NC}"
+  for pkg in "${SKIPPED_PKGS[@]}"; do echo "  - $pkg"; done
+fi
+
+if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
+  echo -e "${RED}❌ Failed:${NC}"
+  for pkg in "${FAILED_PKGS[@]}"; do echo "  - $pkg"; done
+fi
+
+echo -e "${BLUE}==========================================${NC}"
