@@ -50,63 +50,14 @@ done
 opkg update
 
 # Function to install from tmp
-#install_tmp() {
-#  pkg="$1"
-#  echo -e "${YELLOW}Installing $pkg ...${NC}"
-#  cd /tmp
-#  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
-#  sleep 2
-#  rm -f ${pkg}_*.ipk
-#}
-
-# POSIX-compatible success/failed/skipped logs
-SUCCESS_PKGS=""
-FAILED_PKGS=""
-SKIPPED_PKGS=""
-
 install_tmp() {
   pkg="$1"
-
-  # Check if already installed
-  if opkg list-installed | grep -q "^$pkg "; then
-    echo "$pkg is already installed. Skipping."
-    SKIPPED_PKGS="$SKIPPED_PKGS $pkg"
-    return
-  fi
-
-  echo "Installing $pkg ..."
-  cd /tmp || return 1
-
-  retry=0
-  while true; do
-    opkg download "$pkg"
-    ipk_file=$(ls -t ${pkg}_*.ipk 2>/dev/null | head -n1)
-    if [ -n "$ipk_file" ]; then
-      echo "Download successful: $ipk_file"
-      break
-    fi
-    retry=$((retry+1))
-    if [ "$retry" -ge 3 ]; then
-      echo "Failed to download $pkg after 3 attempts. Skipping."
-      FAILED_PKGS="$FAILED_PKGS $pkg"
-      return 1
-    fi
-    echo "Download failed for $pkg. Retrying ($retry/3)..."
-    sleep 2
-  done
-
-  if opkg install "$ipk_file"; then
-    echo "$pkg installed successfully."
-    SUCCESS_PKGS="$SUCCESS_PKGS $pkg"
-  else
-    echo "Failed to install $pkg."
-    FAILED_PKGS="$FAILED_PKGS $pkg"
-  fi
-
-  rm -f "$ipk_file"
+  echo -e "${YELLOW}Installing $pkg ...${NC}"
+  cd /tmp
+  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
+  sleep 2
+  rm -f ${pkg}_*.ipk
 }
-
-
 
 # Main Install Sequence
 opkg remove dnsmasq
@@ -224,15 +175,6 @@ echo -e "${YELLOW}** Installation Completed ** ${NC}"
 rm -f passwall2x.sh passwallx.sh
 /sbin/reload_config
 
-
-# Set root password
-#opkg install openssl-util
-#HASH=$(openssl passwd -1 "123456789")
-#sed -i "/^root:/s|:[^:]*:|:${HASH}:|" /etc/shadow
-#openssl passwd -1 "123456789" | awk -v hash="$(cat)" '{ system("sed -i \"/^root:/s|:[^:]*:|:" hash ":|\" /etc/shadow") }'
-#opkg remove openssl-util
-#echo -e "${YELLOW}** root password set ** ${NC}"
-
 # Set Wifi
 uci set wireless.radio0.cell_density='0'
 uci set wireless.default_radio0.encryption='sae-mixed'
@@ -247,30 +189,4 @@ uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
 echo -e "${YELLOW}** Wifi set ** ${NC}"
-
-echo ""
-echo "========== INSTALLATION SUMMARY =========="
-
-if [ -n "$SUCCESS_PKGS" ]; then
-  echo "✔ Installed:"
-  for pkg in $SUCCESS_PKGS; do
-    echo "  - $pkg"
-  done
-fi
-
-if [ -n "$SKIPPED_PKGS" ]; then
-  echo "🔄 Skipped (already installed):"
-  for pkg in $SKIPPED_PKGS; do
-    echo "  - $pkg"
-  done
-fi
-
-if [ -n "$FAILED_PKGS" ]; then
-  echo "❌ Failed:"
-  for pkg in $FAILED_PKGS; do
-    echo "  - $pkg"
-  done
-fi
-
-echo "=========================================="
 
