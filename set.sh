@@ -50,13 +50,46 @@ done
 opkg update
 
 # Function to install from tmp
+#install_tmp() {
+#  pkg="$1"
+#  echo -e "${YELLOW}Installing $pkg ...${NC}"
+#  cd /tmp
+#  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
+#  sleep 2
+#  rm -f ${pkg}_*.ipk
+#}
+
 install_tmp() {
   pkg="$1"
+  
+  # Check if package is already installed
+  if opkg status "$pkg" 2>/dev/null | grep -q "Status: install ok"; then
+    echo -e "${CYAN}$pkg is already installed. Skipping.${NC}"
+    return
+  fi
+
   echo -e "${YELLOW}Installing $pkg ...${NC}"
   cd /tmp
-  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
-  sleep 2
-  rm -f ${pkg}_*.ipk
+  
+  retry=0
+  until opkg download "$pkg"; do
+    retry=$((retry+1))
+    echo -e "${RED}Download failed for $pkg. Retrying ($retry/3)...${NC}"
+    sleep 2
+    if [ $retry -ge 3 ]; then
+      echo -e "${RED}Failed to download $pkg after 3 attempts. Skipping.${NC}"
+      return 1
+    fi
+  done
+  
+  # Install the most recent downloaded package
+  ipk_file=$(ls -t ${pkg}_*.ipk 2>/dev/null | head -n1)
+  if [ -n "$ipk_file" ]; then
+    opkg install "$ipk_file"
+    rm -f "$ipk_file"
+  else
+    echo -e "${RED}No IPK file found for $pkg. Skipping install.${NC}"
+  fi
 }
 
 # Main Install Sequence
