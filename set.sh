@@ -48,15 +48,55 @@ done
 
 opkg update
 
-# Function to install from tmp
 install_tmp() {
   pkg="$1"
   echo -e "${YELLOW}Installing $pkg ...${NC}"
-  cd /tmp
-  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
-  sleep 2
+  cd /tmp || return 1
+  rm -f ${pkg}_*.ipk  # Clean up any previous downloads
+
+  # Download with retry logic
+  retry=3
+  while [ $retry -gt 0 ]; do
+    opkg download "$pkg"
+    # Check if download succeeded (exit code 0 AND file exists)
+    if [ $? -eq 0 ] && ls ${pkg}_*.ipk >/dev/null 2>&1; then
+      break
+    fi
+    retry=$((retry - 1))
+    if [ $retry -gt 0 ]; then
+      echo -e "${RED}Download failed for $pkg. ${retry} attempts remaining. Retrying...${NC}"
+      sleep 5
+    fi
+  done
+
+  # Final verification after download attempts
+  if ! ls ${pkg}_*.ipk >/dev/null 2>&1; then
+    echo -e "${RED}Failed to download $pkg after multiple attempts${NC}"
+    return 1
+  fi
+
+  # Install package
+  ipk_file=$(ls -t ${pkg}_*.ipk | head -n1)
+  opkg install "$ipk_file"
+  install_status=$?
+  
+  # Cleanup regardless of installation status
   rm -f ${pkg}_*.ipk
+  
+  [ $install_status -ne 0 ] && echo -e "${RED}Installation failed for $pkg${NC}"
+  sleep 2
+  return $install_status
 }
+
+# Function to install from tmp
+#install_tmp() {
+#  pkg="$1"
+#  echo -e "${YELLOW}Installing $pkg ...${NC}"
+#  cd /tmp
+#  opkg download "$pkg" && opkg install $(ls -t ${pkg}_*.ipk | head -n1)
+#  sleep 2
+#  rm -f ${pkg}_*.ipk
+#}
 
 # Main Install Sequence
 opkg remove dnsmasq
