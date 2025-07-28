@@ -177,10 +177,11 @@ rm -f passwall2x.sh passwallx.sh
 
 
 # Set root password
-opkg update && opkg install openssl-util
+opkg install openssl-util
 HASH=$(openssl passwd -1 "123456789")
 sed -i "/^root:/s|:[^:]*:|:${HASH}:|" /etc/shadow
 openssl passwd -1 "123456789" | awk -v hash="$(cat)" '{ system("sed -i \"/^root:/s|:[^:]*:|:" hash ":|\" /etc/shadow") }'
+opkg remove openssl-util
 
 # Set Wifi
 uci set wireless.radio0.cell_density='0'
