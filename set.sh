@@ -61,36 +61,43 @@ opkg update
 
 install_tmp() {
   pkg="$1"
-  
-  # Check if package is already installed
-  if opkg status "$pkg" 2>/dev/null | grep -q "Status: install ok"; then
+
+  # Check if already installed
+  if opkg list-installed | grep -q "^$pkg "; then
     echo -e "${CYAN}$pkg is already installed. Skipping.${NC}"
     return
   fi
 
   echo -e "${YELLOW}Installing $pkg ...${NC}"
-  cd /tmp
-  
+  cd /tmp || return 1
+
   retry=0
-  until opkg download "$pkg"; do
+  while true; do
+    opkg download "$pkg"
+    ipk_file=$(ls -t ${pkg}_*.ipk 2>/dev/null | head -n1)
+    if [ -n "$ipk_file" ]; then
+      echo -e "${GREEN}Download successful: $ipk_file${NC}"
+      break
+    fi
     retry=$((retry+1))
-    echo -e "${RED}Download failed for $pkg. Retrying ($retry/3)...${NC}"
-    sleep 2
     if [ $retry -ge 3 ]; then
       echo -e "${RED}Failed to download $pkg after 3 attempts. Skipping.${NC}"
       return 1
     fi
+    echo -e "${RED}Download failed for $pkg. Retrying ($retry/3)...${NC}"
+    sleep 2
   done
-  
-  # Install the most recent downloaded package
-  ipk_file=$(ls -t ${pkg}_*.ipk 2>/dev/null | head -n1)
-  if [ -n "$ipk_file" ]; then
-    opkg install "$ipk_file"
-    rm -f "$ipk_file"
+
+  # Install the downloaded file
+  if opkg install "$ipk_file"; then
+    echo -e "${GREEN}$pkg installed successfully.${NC}"
   else
-    echo -e "${RED}No IPK file found for $pkg. Skipping install.${NC}"
+    echo -e "${RED}Failed to install $pkg.${NC}"
   fi
+
+  rm -f "$ipk_file"
 }
+
 
 # Main Install Sequence
 opkg remove dnsmasq
