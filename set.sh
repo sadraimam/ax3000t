@@ -17,7 +17,7 @@ uci set wireless.default_radio1.key='123456789'
 uci set wireless.default_radio1.ocv='0'
 uci commit wireless
 wifi reload
-uci set wireless.default_radio0.disabled='0'
-uci set wireless.default_radio1.disabled='0'
+uci set wireless.radio0.disabled='0'
+uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
