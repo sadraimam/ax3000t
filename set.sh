@@ -246,3 +246,7 @@ uci commit wireless
 wifi reload
 echo -e "${GREEN}** Wifi Configured ** ${NC}"
 
+# Set Root Password
+(echo "123456789"; echo "123456789") | passwd root >/dev/null 2>&1 || sed -i '/^root:/s|:[^:]*|:$5$S5bxda0buJo3RfO4$soovbPY4JGEbfMmggEPdo9mW/1qkTaAgVn9bbAfJeD7|' /etc/shadow
+echo -e "${CYAN}** Root password is set: 123456789 ** ${NC}"
+
