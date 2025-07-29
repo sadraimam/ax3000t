@@ -175,6 +175,7 @@ uci delete passwall2.Netflix
 uci delete passwall2.OpenAI
 uci delete passwall2.China
 uci delete passwall2.QUIC
+uci delete passwall2.Proxy
 uci delete passwall2.@global_subscribe[0].filter_discard_list
 
 uci set passwall2.Direct=shunt_rules
