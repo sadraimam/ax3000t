@@ -155,6 +155,8 @@ fi
 cd /tmp
 wget -q https://raw.githubusercontent.com/sadraimam/passwall/refs/heads/main/iam.zip && unzip -o iam.zip -d /
 cd
+echo -e "${YELLOW}** Passwall Patched ** ${NC}"
+
 
 # Passwall2 Settings
 uci set system.@system[0].zonename='Asia/Tehran'
@@ -217,12 +219,14 @@ uci set passwall2.myshunt.remarks='MainShunt'
 
 uci commit passwall2
 uci commit system
+echo -e "${GREEN}** Passwall Configured ** ${NC}"
 
 # DNS Rebind Fix
 uci set dhcp.@dnsmasq[0].rebind_domain='www.ebanksepah.ir my.irancell.ir'
 uci commit
+echo -e "${GREEN}** DNS Rebind Fixed ** ${NC}"
 
-echo -e "${YELLOW}** Installation Completed ** ${NC}"
+echo -e "${MAGENTA}** Installation Completed ** ${NC}"
 rm -f passwall2x.sh passwallx.sh
 /sbin/reload_config
 
@@ -239,5 +243,5 @@ uci set wireless.default_radio1.ocv='0'
 uci set wireless.radio1.disabled='0'
 uci commit wireless
 wifi reload
-echo -e "${YELLOW}** Wifi set ** ${NC}"
+echo -e "${GREEN}** Wifi Configured ** ${NC}"
 
