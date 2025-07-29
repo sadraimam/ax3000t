@@ -8,14 +8,17 @@ CYAN='\033[0;36m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
+#root check
 if [ "$(id -u)" -ne 0 ]; then
   echo "${RED}This script must be run as root. Exiting.${NC}"
   exit 1
+else
+  echo "${GREEN}Running as root...${NC}"
+  sleep 2
+  clear
 fi
-echo "${GREEN}Running as root...${NC}"
-sleep 2
-clear
 
+#Snapshot check
 #SNNAP=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
 #if [ "$SNNAP" == "SNAPSHOT" ]; then
 if grep -q "SNAPSHOT" /etc/openwrt_release; then
