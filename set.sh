@@ -22,7 +22,7 @@ else
     echo -e "${GREEN} Updating Packages ... ${NC}"
 fi
 
-# Add Passwall Feeds
+# Initialize
 uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
 uci set network.wan.peerdns="0"
