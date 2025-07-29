@@ -8,7 +8,11 @@ CYAN='\033[0;36m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
-echo "Running as root..."
+if [ "$(id -u)" -ne 0 ]; then
+  echo "${RED}This script must be run as root. Exiting.${NC}"
+  exit 1
+fi
+echo "${GREEN}Running as root...${NC}"
 sleep 2
 clear
 
