@@ -12,8 +12,9 @@ echo "Running as root..."
 sleep 2
 clear
 
-SNNAP=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
-if [ "$SNNAP" == "SNAPSHOT" ]; then
+#SNNAP=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
+#if [ "$SNNAP" == "SNAPSHOT" ]; then
+if grep -q "SNAPSHOT" /etc/openwrt_release; then
     echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
     echo -e "${RED} Snapshot not Supported. ! ${NC}"
     exit 1
