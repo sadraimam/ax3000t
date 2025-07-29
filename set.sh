@@ -250,3 +250,24 @@ echo -e "${GREEN}** Wifi Configured ** ${NC}"
 (echo "123456789"; echo "123456789") | passwd root >/dev/null 2>&1 || sed -i '/^root:/s|:[^:]*|:$5$S5bxda0buJo3RfO4$soovbPY4JGEbfMmggEPdo9mW/1qkTaAgVn9bbAfJeD7|' /etc/shadow
 echo -e "${CYAN}** Root password is set: 123456789 ** ${NC}"
 
+# Reboot or Exit
+while true; do
+    printf "${YELLOW}Press [r] to reboot or [e] to exit: ${NC}"
+    read -rsn1 input
+    
+    case "$input" in
+        r|R)
+            echo -e "${GREEN}\nRebooting system...${NC}"
+            reboot
+            exit 0
+            ;;
+        e|E)
+            echo -e "${RED}\nExiting script.${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}\nInvalid choice! Press 'r' or 'e'.${NC}"
+            sleep 1
+            ;;
+    esac
+done
