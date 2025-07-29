@@ -209,19 +209,10 @@ ff00::/8'
 uci set passwall2.Direct.domain_list='regexp:^.+\.ir$
 geosite:category-ir'
 
+#  myshunt
 uci set passwall2.myshunt.Direct='_direct'
 uci set passwall2.myshunt.DirectGame='_direct'
-
-#  myshunt
-uci delete passwall2.myshunt
-
-#  MainShunt
-uci set passwall2.MainShunt=nodes
-uci set passwall2.MainShunt.remarks='MainShunt'
-uci set passwall2.MainShunt.type='Xray'
-uci set passwall2.MainShunt.protocol='_shunt'
-uci set passwall2.MainShunt.Direct='_direct'
-uci set passwall2.MainShunt.DirectGame='_default'
+uci set passwall2.myshunt.remarks='MainShunt'
 
 uci commit passwall2
 uci commit system
