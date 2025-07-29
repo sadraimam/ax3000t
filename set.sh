@@ -179,6 +179,10 @@ uci delete passwall2.Proxy
 uci delete passwall2.UDP
 uci delete passwall2.@global_subscribe[0].filter_discard_list
 
+uci set passwall2.myshunt.Direct='_direct'
+uci set passwall2.myshunt.DirectGame='_direct'
+uci set passwall2.myshunt.remarks='MainShunt'
+
 uci set passwall2.Direct=shunt_rules
 uci set passwall2.Direct.network='tcp,udp'
 uci set passwall2.Direct.remarks='IRAN'
@@ -213,11 +217,6 @@ fe80::/10
 ff00::/8'
 uci set passwall2.Direct.domain_list='regexp:^.+\.ir$
 geosite:category-ir'
-
-#  myshunt
-uci set passwall2.myshunt.Direct='_direct'
-uci set passwall2.myshunt.DirectGame='_direct'
-uci set passwall2.myshunt.remarks='MainShunt'
 
 uci commit passwall2
 uci commit system
