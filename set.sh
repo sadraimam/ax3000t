@@ -137,7 +137,7 @@ verify_installation() {
     fi
 }
 
-# Run checks
+# Verify installations
 verify_installation "dnsmasq-full" "/usr/lib/opkg/info/dnsmasq-full.control"
 verify_installation "Passwall2" "/etc/init.d/passwall2"
 verify_installation "XRAY" "/usr/bin/xray"
