@@ -35,10 +35,11 @@ uci set system.@system[0].timezone='<+0330>-3:30'
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.dns='8.8.4.4'
-uci set network.wan6.dns='2001:4860:4860::8888'
+uci set network.wan6.dns='2001:4860:4860::8888 2001:4860:4860::8844'
 uci commit system
 uci commit network
 /sbin/reload_config
+echo "${GREEN}Initialized!${NC}"
 
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
@@ -52,6 +53,7 @@ EOF
 for feed in passwall_luci passwall_packages passwall2; do
   echo "src/gz $feed https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-$release/$arch/$feed" >> /etc/opkg/customfeeds.conf
 done
+echo "${GREEN}Feed Updated!${NC}"
 
 opkg update
 
