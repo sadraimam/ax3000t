@@ -233,8 +233,11 @@ uci commit system
 echo -e "${GREEN}** Passwall Configured ** ${NC}"
 
 # DNS Rebind Fix
-uci set dhcp.@dnsmasq[0].rebind_domain='www.ebanksepah.ir my.irancell.ir'
-uci commit
+uci set dhcp.@dnsmasq[0].rebind_domain='my.irancell.ir my.mci.ir login.tci.ir local.tci.ir 192.168.1.1.mci 192.168.1.1.irancell'
+uci commit dhcp
+/etc/init.d/dnsmasq restart
+
+#uci commit
 echo -e "${GREEN}** DNS Rebind Fixed ** ${NC}"
 
 echo -e "${MAGENTA}** Installation Completed ** ${NC}"
