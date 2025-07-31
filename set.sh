@@ -171,6 +171,7 @@ echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 # Passwall2 Settings
 uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
+uci commit system
 
 uci set passwall2.@global_forwarding[0]=global_forwarding
 uci set passwall2.@global_forwarding[0].tcp_no_redir_ports='disable'
@@ -194,8 +195,10 @@ uci set passwall2.myshunt.DirectGame='_direct'
 uci set passwall2.myshunt.remarks='MainShunt'
 
 uci set passwall2.Direct=shunt_rules
-uci set passwall2.Direct.network='tcp,udp'
 uci set passwall2.Direct.remarks='IRAN'
+uci set passwall2.Direct.network='tcp,udp'
+
+# Optimized IP List (includes geoip:ir + all private/special ranges)
 uci set passwall2.Direct.ip_list='geoip:ir
 0.0.0.0/8
 10.0.0.0/8
@@ -207,7 +210,7 @@ uci set passwall2.Direct.ip_list='geoip:ir
 192.0.2.0/24
 192.88.99.0/24
 192.168.0.0/16
-198.19.0.0/16
+198.18.0.0/15
 198.51.100.0/24
 203.0.113.0/24
 224.0.0.0/4
@@ -225,11 +228,33 @@ uci set passwall2.Direct.ip_list='geoip:ir
 fc00::/7
 fe80::/10
 ff00::/8'
-uci set passwall2.Direct.domain_list='regexp:^.+\.ir$
-geosite:category-ir'
 
+# Improved Domain List: geo-based + known local portals
+uci set passwall2.Direct.domain_list='geosite:ir
+geosite:category-ir
+full:my.irancell.ir
+full:my.mci.ir
+full:login.tci.ir
+full:local.tci.ir
+regexp:^.+\.ir$'
+
+# Optional: Set default routing to proxy for all other traffic
+#uci set passwall2.default_policy='proxy'
+
+# Optional: Split DNS resolvers
+#uci set passwall2.dns.direct_dns='178.22.122.100,185.51.200.2'
+#uci set passwall2.dns.proxy_dns='https://dns.google/dns-query'
+
+# Optional: Force DNS hijack to prevent leaks
+#uci set passwall2.global.dns_mode='tun'
+#uci set passwall2.global.redirect_dns='1'
+
+# Enable auto-update of geosite/geoip lists
+#uci set passwall2.auto_update='1'
+#uci set passwall2.auto_update_time='3'
+
+# Save and apply
 uci commit passwall2
-uci commit system
 echo -e "${GREEN}** Passwall Configured ** ${NC}"
 
 # DNS Rebind Fix
