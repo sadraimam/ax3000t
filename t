@@ -34,3 +34,40 @@ uci set passwall2.Direct.domain_list='regexp:^.+\.ir$
 geosite:category-ir'
 
 uci commit passwall2
+
+
+### Verify Installation ###
+RESULT5=`ls /usr/lib/opkg/info/dnsmasq-full.control`
+if [ "$RESULT5" == "/usr/lib/opkg/info/dnsmasq-full.control" ]; then
+echo -e "${GREEN} dnsmasq-full : OK ! ${NC}"
+ else
+ echo -e "${YELLOW} dnsmasq-full : NOT INSTALLED X ${NC}"
+fi
+
+RESULT5=`ls /etc/init.d/passwall2`
+if [ "$RESULT5" == "/etc/init.d/passwall2" ]; then
+echo -e "${GREEN} Passwall2 : OK ! ${NC}"
+ else
+ echo -e "${YELLOW} Passwall2 : NOT INSTALLED X ${NC}"
+fi
+
+RESULT=`ls /usr/bin/xray`
+if [ "$RESULT" == "/usr/bin/xray" ]; then
+echo -e "${GREEN} XRAY : OK ! ${NC}"
+ else
+ echo -e "${YELLOW} XRAY : NOT INSTALLED X ${NC}"
+fi
+
+RESULT=`ls /usr/bin/sing-box`
+if [ "$RESULT" == "/usr/bin/sing-box" ]; then
+echo -e "${GREEN} Sing-box : OK ! ${NC}"
+ else
+ echo -e "${YELLOW} Sing-box : NOT INSTALLED X ${NC}"
+fi
+
+RESULT=`ls /usr/bin/hysteria`
+if [ "$RESULT" == "/usr/bin/hysteria" ]; then
+echo -e "${GREEN} Hysteria : OK ! ${NC}"
+ else
+ echo -e "${YELLOW} Hysteria : NOT INSTALLED X ${NC}"
+fi
