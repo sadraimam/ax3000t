@@ -125,41 +125,24 @@ install_tmp ipset
 install_tmp sing-box
 install_tmp hysteria
 
-### Verify Installation ###
-RESULT5=`ls /usr/lib/opkg/info/dnsmasq-full.control`
-if [ "$RESULT5" == "/usr/lib/opkg/info/dnsmasq-full.control" ]; then
-echo -e "${GREEN} dnsmasq-full : OK ! ${NC}"
- else
- echo -e "${YELLOW} dnsmasq-full : NOT INSTALLED X ${NC}"
-fi
+# Function to verify installation
+verify_installation() {
+    local name="$1"
+    local path="$2"
 
-RESULT5=`ls /etc/init.d/passwall2`
-if [ "$RESULT5" == "/etc/init.d/passwall2" ]; then
-echo -e "${GREEN} Passwall2 : OK ! ${NC}"
- else
- echo -e "${YELLOW} Passwall2 : NOT INSTALLED X ${NC}"
-fi
+    if [ -e "$path" ]; then
+        echo -e "${GREEN}${name} : INSTALLED!${NC}"
+    else
+        echo -e "${YELLOW}${name} : NOT INSTALLED!${NC}"
+    fi
+}
 
-RESULT=`ls /usr/bin/xray`
-if [ "$RESULT" == "/usr/bin/xray" ]; then
-echo -e "${GREEN} XRAY : OK ! ${NC}"
- else
- echo -e "${YELLOW} XRAY : NOT INSTALLED X ${NC}"
-fi
-
-RESULT=`ls /usr/bin/sing-box`
-if [ "$RESULT" == "/usr/bin/sing-box" ]; then
-echo -e "${GREEN} Sing-box : OK ! ${NC}"
- else
- echo -e "${YELLOW} Sing-box : NOT INSTALLED X ${NC}"
-fi
-
-RESULT=`ls /usr/bin/hysteria`
-if [ "$RESULT" == "/usr/bin/hysteria" ]; then
-echo -e "${GREEN} Hysteria : OK ! ${NC}"
- else
- echo -e "${YELLOW} Hysteria : NOT INSTALLED X ${NC}"
-fi
+# Run checks
+verify_installation "dnsmasq-full" "/usr/lib/opkg/info/dnsmasq-full.control"
+verify_installation "Passwall2" "/etc/init.d/passwall2"
+verify_installation "XRAY" "/usr/bin/xray"
+verify_installation "Sing-box" "/usr/bin/sing-box"
+verify_installation "Hysteria" "/usr/bin/hysteria"
 
 # Optional Patch
 cd /tmp
