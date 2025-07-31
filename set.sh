@@ -144,7 +144,7 @@ verify_installation "XRAY" "/usr/bin/xray"
 verify_installation "Sing-box" "/usr/bin/sing-box"
 verify_installation "Hysteria" "/usr/bin/hysteria"
 
-# Optional Patch
+# Passwall Patch
 cd /tmp
 wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o iam.zip -d /
 cd
