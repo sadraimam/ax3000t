@@ -146,7 +146,7 @@ verify_installation "Hysteria" "/usr/bin/hysteria"
 
 # Passwall Patch
 cd /tmp
-wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o iam.zip -d /
+wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
 cd
 echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 
