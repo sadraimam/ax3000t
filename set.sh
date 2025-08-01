@@ -42,16 +42,64 @@ uci commit network
 echo "${GREEN}Initialized!${NC}"
 
 # Add Passwall Feeds
-wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
-opkg-key add passwall.pub
->/etc/opkg/customfeeds.conf
+#wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
+#opkg-key add passwall.pub
+#>/etc/opkg/customfeeds.conf
 
-read release arch << EOF
+#read release arch << EOF
+#$(. /etc/openwrt_release ; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
+#EOF
+#for feed in passwall_luci passwall_packages passwall2; do
+#  echo "src/gz $feed https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-$release/$arch/$feed" >> /etc/opkg/customfeeds.conf
+#done
+#echo "${GREEN}Feed Updated!${NC}"
+
+MAX_RETRIES=3
+RETRY_DELAY=5  # seconds
+
+# Function to download the Passwall public key
+download_key() {
+  echo "Downloading Passwall public key..."
+  wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
+  return $?
+}
+
+# Try downloading the key, retry up to 3 times if it fails
+if ! download_key; then
+  for i in $(seq 1 $MAX_RETRIES); do
+    echo "Retrying download ($i/$MAX_RETRIES) in $RETRY_DELAY seconds..."
+    sleep $RETRY_DELAY
+    if download_key; then
+      break
+    fi
+  done
+fi
+
+# Final check
+if [ ! -f passwall.pub ]; then
+  echo "ERROR: Failed to download passwall.pub after $((MAX_RETRIES + 1)) attempts."
+  exit 1
+fi
+
+# Add the public key
+if ! opkg-key add passwall.pub; then
+  echo "ERROR: Failed to add Passwall opkg key."
+  exit 1
+fi
+
+# Clean and rebuild feeds config
+> /etc/opkg/customfeeds.conf
+
+# Extract OpenWRT version and architecture
+read release arch <<EOF
 $(. /etc/openwrt_release ; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
 EOF
+
+# Add Passwall feeds
 for feed in passwall_luci passwall_packages passwall2; do
   echo "src/gz $feed https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-$release/$arch/$feed" >> /etc/opkg/customfeeds.conf
 done
+
 echo "${GREEN}Feed Updated!${NC}"
 
 opkg update
