@@ -250,7 +250,7 @@ uci commit dhcp
 echo -e "${GREEN}** DNS Rebind Fixed ** ${NC}"
 
 echo -e "${MAGENTA}** Installation Completed ** ${NC}"
-rm -f passwall2x.sh passwallx.sh
+rm -f set.sh
 /sbin/reload_config
 
 # Set Wifi
