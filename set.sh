@@ -9,25 +9,25 @@ GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
 #root check
-if [ "$(id -u)" -ne 0 ]; then
-  echo "${RED}This script must be run as root. Exiting.${NC}"
-  exit 1
-else
-  echo "${GREEN}Running as root...${NC}"
-  sleep 2
-  clear
-fi
+#if [ "$(id -u)" -ne 0 ]; then
+#  echo "${RED}This script must be run as root. Exiting.${NC}"
+#  exit 1
+#else
+#  echo "${GREEN}Running as root...${NC}"
+#  sleep 2
+#  clear
+#fi
 
 #Snapshot check
 #SNNAP=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
 #if [ "$SNNAP" == "SNAPSHOT" ]; then
-if grep -q "SNAPSHOT" /etc/openwrt_release; then
-    echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
-    echo -e "${RED} Snapshot not Supported. ! ${NC}"
-    exit 1
-else           
-    echo -e "${GREEN} Updating Packages ... ${NC}"
-fi
+#if grep -q "SNAPSHOT" /etc/openwrt_release; then
+#    echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
+#    echo -e "${RED} Snapshot not Supported. ! ${NC}"
+#    exit 1
+#else           
+#    echo -e "${GREEN} Updating Packages ... ${NC}"
+#fi
 
 # Initialize
 uci set system.@system[0].zonename='Asia/Tehran'
