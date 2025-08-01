@@ -15,18 +15,13 @@ Automated configuration script for Xiaomi AX3000T running OpenWrt.
 
 ## Installation
 
-### Option 1: Direct Download and Run
+### Direct Download and Run
 ```bash
 rm -f set.sh && wget https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh && chmod 777 set.sh && sh set.sh
 ```
 
-### Option 2: Pipe to Shell (Not Recommended for Security)
-```bash
-wget -qO- https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh | sh
-```
-
 ## Security Notice
-Always review scripts before running them with root privileges. Option 1 is preferred as it allows inspection of the script before execution.
+Always review scripts before running them with root privileges. 
 
 ## Default Settings
 - Default root password: 123456789 (Change after installation!)
