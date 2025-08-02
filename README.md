@@ -1,6 +1,6 @@
-# Xiaomi AX3000T OpenWrt Configuration
+# Xiaomi AX3000T OpenWrt Passwall2
 
-Automated configuration script for Xiaomi AX3000T running OpenWrt.
+Passwall2 Automated configuration script for Xiaomi AX3000T running OpenWrt.
 
 ## Features
 - Installs and configures Passwall2
