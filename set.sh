@@ -49,8 +49,8 @@ uci commit network
 /etc/init.d/sysntpd restart
 sleep 2
 ntpd -n -q -p 0.openwrt.pool.ntp.org
-echo -e "${GREEN}System time synced with NTP.${NC}"
-echo -e "${GREEN} Initialized! ${NC}"
+echo -e "${GREEN}Time synced with NTP.${NC}"
+echo -e "${GREEN}System Initialized! ${NC}"
 
 # Add Passwall Feeds
 wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
