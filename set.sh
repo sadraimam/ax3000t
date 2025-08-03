@@ -45,12 +45,21 @@ uci set network.wan6.dns='2001:4860:4860::8888 2001:4860:4860::8844'
 uci commit system
 uci commit network
 /sbin/reload_config
-# Force NTP resync
-/etc/init.d/sysntpd restart
-sleep 2
-ntpd -n -q -p 0.openwrt.pool.ntp.org
-echo -e "${GREEN}Time synced with NTP.${NC}"
 echo -e "${GREEN}System Initialized! ${NC}"
+
+# Force NTP resync
+uci set system.ntp.server='ir.pool.ntp.org'
+uci commit system
+/etc/init.d/sysntpd restart
+# Force NTP sync (with retry fallback)
+echo -e "${YELLOW}Syncing time with NTP...${NC}"
+ntpd -n -q -p ir.pool.ntp.org || {
+  echo -e "${RED}NTP sync failed! Retrying with global pool...${NC}"
+  ntpd -n -q -p 0.openwrt.pool.ntp.org || {
+    echo -e "${RED}NTP sync failed again. Please check DNS/network.${NC}"
+  }
+}
+date
 
 # Add Passwall Feeds
 wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
