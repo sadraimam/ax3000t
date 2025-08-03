@@ -24,7 +24,7 @@ if grep -q SNAPSHOT /etc/openwrt_release; then
     echo -e "${RED}Snapshot builds are not supported.${NC}"
     exit 1
 else
-    echo -e "${GREEN}Updating Packages...${NC}"
+    echo -e "${GREEN}Configuring System...${NC}"
 fi
 #SNAPS=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
 #if [ "$SNAPS" == "SNAPSHOT" ]; then
