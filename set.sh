@@ -26,14 +26,6 @@ if grep -q SNAPSHOT /etc/openwrt_release; then
 else
     echo -e "${GREEN}Configuring System...${NC}"
 fi
-#SNAPS=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
-#if [ "$SNAPS" == "SNAPSHOT" ]; then
-#    echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
-#    echo -e "${RED} Snapshot not Supported. ! ${NC}"
-#    exit 1
-#else           
-#    echo -e "${GREEN} Updating Packages ... ${NC}"
-#fi
 
 # Initialize
 uci set system.@system[0].zonename='Asia/Tehran'
@@ -62,9 +54,9 @@ ntpd -n -q -p ir.pool.ntp.org || {
 date
 
 # Add Passwall Feeds
-wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
-opkg-key add passwall.pub
-rm -f passwall.pub
+wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
+opkg-key add /tmp/passwall.pub
+rm -f /tmp/passwall.pubpasswall.pub
 > /etc/opkg/customfeeds.conf
 read release arch <<EOF
 $(. /etc/openwrt_release; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
@@ -74,6 +66,7 @@ for feed in passwall_luci passwall_packages passwall2; do
 done
 echo -e "${GREEN}Feed Updated!${NC}"
 
+echo -e "${YELLOW}Updating Packages...${NC}"
 opkg update
 
 # Function to install from tmp
