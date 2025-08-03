@@ -19,14 +19,21 @@ else
 fi
 
 #Snapshot check
-SNAPS=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
-if [ "$SNAPS" == "SNAPSHOT" ]; then
-    echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
-    echo -e "${RED} Snapshot not Supported. ! ${NC}"
+if grep -q SNAPSHOT /etc/openwrt_release; then
+    echo -e "${YELLOW}SNAPSHOT Version Detected!${NC}"
+    echo -e "${RED}Snapshot builds are not supported.${NC}"
     exit 1
-else           
-    echo -e "${GREEN} Updating Packages ... ${NC}"
+else
+    echo -e "${GREEN}Updating Packages...${NC}"
 fi
+#SNAPS=`grep -o SNAPSHOT /etc/openwrt_release | sed -n '1p'`
+#if [ "$SNAPS" == "SNAPSHOT" ]; then
+#    echo -e "${YELLOW} SNAPSHOT Version Detected ! ${NC}"
+#    echo -e "${RED} Snapshot not Supported. ! ${NC}"
+#    exit 1
+#else           
+#    echo -e "${GREEN} Updating Packages ... ${NC}"
+#fi
 
 # Initialize
 uci set system.@system[0].zonename='Asia/Tehran'
