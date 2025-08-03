@@ -48,12 +48,9 @@ uci commit network
 echo "${GREEN} Initialized! ${NC}"
 
 # Add Passwall Feeds
-#wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
-#opkg-key add passwall.pub
-#>/etc/opkg/customfeeds.conf
-wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
-opkg-key add /tmp/passwall.pub
-rm -f /tmp/passwall.pub
+wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
+opkg-key add passwall.pub
+rm -f passwall.pub
 > /etc/opkg/customfeeds.conf
 read release arch <<EOF
 $(. /etc/openwrt_release; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
