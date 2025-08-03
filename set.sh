@@ -242,8 +242,8 @@ regexp:^.+\.ir$'
 #uci set passwall2.global.redirect_dns='1'
 
 # Enable auto-update of geosite/geoip lists
-#uci set passwall2.auto_update='1'
-#uci set passwall2.auto_update_time='3'
+uci set passwall2.auto_update='1'
+uci set passwall2.auto_update_time='3'
 
 # Save and apply
 uci commit passwall2
