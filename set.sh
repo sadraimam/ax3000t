@@ -157,11 +157,11 @@ verify_installation "Sing-box" "/usr/bin/sing-box"
 verify_installation "Hysteria" "/usr/bin/hysteria"
 
 # Passwall Patch
-cd /tmp
-wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
-cd
-rm -f /tmp/patch.zip
-echo -e "${YELLOW}** Passwall Patched ** ${NC}"
+#cd /tmp
+#wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
+#cd
+#rm -f /tmp/patch.zip
+#echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 
 
 # Passwall2 Settings
