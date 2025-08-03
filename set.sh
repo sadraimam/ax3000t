@@ -56,7 +56,7 @@ date
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
 opkg-key add /tmp/passwall.pub
-rm -f /tmp/passwall.pubpasswall.pub
+rm -f /tmp/passwall.pub
 > /etc/opkg/customfeeds.conf
 read release arch <<EOF
 $(. /etc/openwrt_release; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
@@ -160,6 +160,7 @@ verify_installation "Hysteria" "/usr/bin/hysteria"
 cd /tmp
 wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
 cd
+rm -f /tmp/patch.zip
 echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 
 
@@ -257,13 +258,11 @@ echo -e "${GREEN}** Passwall Configured ** ${NC}"
 uci set dhcp.@dnsmasq[0].rebind_domain='my.irancell.ir my.mci.ir login.tci.ir local.tci.ir 192.168.1.1.mci 192.168.1.1.irancell'
 uci commit dhcp
 /etc/init.d/dnsmasq restart
-
-#uci commit
 echo -e "${GREEN}** DNS Rebind Fixed ** ${NC}"
 
-echo -e "${MAGENTA}** Installation Completed ** ${NC}"
-rm -f set.sh
+rm -f /root/set.sh
 /sbin/reload_config
+echo -e "${MAGENTA}** Installation Completed ** ${NC}"
 
 # Set Wifi
 uci set wireless.radio0.cell_density='0'
