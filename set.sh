@@ -10,10 +10,10 @@ NC='\033[0m' # No Color
 
 #root check
 if [ "$(id -u)" -ne 0 ]; then
-  echo -e "${RED} This script must be run as root. Exiting. ${NC}"
+  echo -e "${RED}This script must be run as root. Exiting. ${NC}"
   exit 1
 else
-  echo -e "${GREEN} Running as root... ${NC}"
+  echo -e "${GREEN}Running as root... ${NC}"
   sleep 2
   clear
 fi
@@ -243,7 +243,7 @@ regexp:^.+\.ir$'
 
 # Enable auto-update of geosite/geoip lists
 uci set passwall2.auto_update='1'
-uci set passwall2.auto_update_time='3'
+uci set passwall2.auto_update_time='24'
 
 # Save and apply
 uci commit passwall2
