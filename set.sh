@@ -45,7 +45,7 @@ uci set network.wan6.dns='2001:4860:4860::8888 2001:4860:4860::8844'
 uci commit system
 uci commit network
 /sbin/reload_config
-echo "${GREEN} Initialized! ${NC}"
+echo -e "${GREEN} Initialized! ${NC}"
 
 # Add Passwall Feeds
 wget -O passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
