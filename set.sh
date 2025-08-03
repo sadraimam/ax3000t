@@ -161,8 +161,12 @@ verify_installation "Hysteria" "/usr/bin/hysteria"
 #wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
 #cd
 #rm -f /tmp/patch.zip
-#echo -e "${YELLOW}** Passwall Patched ** ${NC}"
-
+wget -O /tmp/status.htm https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/status.htm
+cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
+cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
+echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall
+rm -f /tmp/status.htm
+echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 
 # Passwall2 Settings
 uci set system.@system[0].zonename='Asia/Tehran'
