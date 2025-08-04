@@ -157,13 +157,9 @@ cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
 cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
 echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall2
 rm -f /tmp/status.htm
-echo -e "${YELLOW}** Passwall Patched ** ${NC}"
+echo -e "${GREEN}** Passwall Patched ** ${NC}"
 
 # Passwall2 Settings
-uci set system.@system[0].zonename='Asia/Tehran'
-uci set system.@system[0].timezone='<+0330>-3:30'
-uci commit system
-
 uci set passwall2.@global_forwarding[0]=global_forwarding
 uci set passwall2.@global_forwarding[0].tcp_no_redir_ports='disable'
 uci set passwall2.@global_forwarding[0].udp_no_redir_ports='disable'
