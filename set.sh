@@ -123,7 +123,6 @@ install_tmp() {
 opkg remove dnsmasq
 install_tmp dnsmasq-full
 install_tmp wget-ssl
-#install_tmp unzip
 install_tmp luci-app-passwall2
 install_tmp kmod-nft-socket
 install_tmp kmod-nft-tproxy
@@ -138,7 +137,6 @@ install_tmp hysteria
 verify_installation() {
     local name="$1"
     local path="$2"
-
     if [ -e "$path" ]; then
         echo -e "${GREEN}${name} : INSTALLED!${NC}"
     else
@@ -154,10 +152,6 @@ verify_installation "Sing-box" "/usr/bin/sing-box"
 verify_installation "Hysteria" "/usr/bin/hysteria"
 
 # Passwall Patch
-#cd /tmp
-#wget -q https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/patch.zip && unzip -o patch.zip -d /
-#cd
-#rm -f /tmp/patch.zip
 wget -O /tmp/status.htm https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/status.htm
 cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
 cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
