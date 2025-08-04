@@ -1,3 +1,22 @@
+uci delete network.lan.dns
+uci delete dhcp.@dnsmasq[0].server
+uci commit
+
+uci set network.lan.dns='8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1'
+uci set network.lan.peerdns='0'
+uci commit network
+/etc/init.d/network restart
+
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci add_list dhcp.@dnsmasq[0].server='8.8.8.8'
+uci add_list dhcp.@dnsmasq[0].server='8.8.4.4'
+uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
+uci add_list dhcp.@dnsmasq[0].server='1.0.0.1'
+uci commit dhcp
+/etc/init.d/dnsmasq restart
+
+-----------------------------------------------------------------------------------
+
 # Optional: Set default routing to proxy for all other traffic
 uci set passwall2.default_policy='proxy'
 
