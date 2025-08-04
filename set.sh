@@ -37,7 +37,10 @@ uci commit network
 echo -e "${GREEN}System Initialized! ${NC}"
 
 # Force NTP resync
-uci set system.ntp.server='ir.pool.ntp.org'
+uci delete system.ntp.server
+uci add_list system.ntp.server='ir.pool.ntp.org'
+uci add_list system.ntp.server='0.openwrt.pool.ntp.org'
+uci add_list system.ntp.server='1.openwrt.pool.ntp.org'
 uci commit system
 /etc/init.d/sysntpd restart
 # Force NTP sync (with retry fallback)
