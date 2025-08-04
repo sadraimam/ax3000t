@@ -263,7 +263,7 @@ echo -e "${GREEN}** DNS Rebind Fixed ** ${NC}"
 
 rm -f /root/set.sh
 /sbin/reload_config
-echo -e "${MAGENTA}** Installation Completed ** ${NC}"
+echo -e "${CYAN}** Installation Completed ** ${NC}"
 
 # Set Wifi
 uci set wireless.radio0.cell_density='0'
