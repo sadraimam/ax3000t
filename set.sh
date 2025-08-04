@@ -161,7 +161,7 @@ verify_installation "Hysteria" "/usr/bin/hysteria"
 wget -O /tmp/status.htm https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/status.htm
 cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
 cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
-echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall
+echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall2
 rm -f /tmp/status.htm
 echo -e "${YELLOW}** Passwall Patched ** ${NC}"
 
