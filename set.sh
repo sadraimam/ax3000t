@@ -27,15 +27,15 @@ fi
 # Initialize
 uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
+uci commit system
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.dns='8.8.4.4 1.1.1.1' 
 uci set network.wan6.dns='2001:4860:4860::8844 2606:4700:4700::1111'
+uci commit network
 uci set dhcp.@dnsmasq[0].noresolv='1'
 uci set dhcp.@dnsmasq[0].localuse='1'
 uci commit dhcp
-uci commit system
-uci commit network
 /sbin/reload_config
 echo -e "${GREEN}System Initialized! ${NC}"
 
