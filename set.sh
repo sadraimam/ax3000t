@@ -232,37 +232,6 @@ full:login.tci.ir
 full:local.tci.ir
 regexp:^.+\.ir$'
 
-  # Optional: Set default routing to proxy for all other traffic
-#uci set passwall2.default_policy='proxy'
-
-  # Optional: Split DNS resolvers
-#uci set passwall2.dns.direct_dns='178.22.122.100,185.51.200.2'
-#uci set passwall2.dns.proxy_dns='https://dns.google/dns-query'
-
-  # Optional: Force DNS hijack to prevent leaks
-#uci set passwall2.global.dns_mode='tun'
-#uci set passwall2.global.redirect_dns='1'
-
-  # Enable auto-update of geosite/geoip lists
-#uci set passwall2.auto_update='1'
-#uci set passwall2.auto_update_time='24'
-
-# ===== DNS Leak Protection =====
-#uci set passwall2.@global[0].dns_mode='tun'  # Encrypted DNS tunnel
-#uci set passwall2.@global[0].remote_dns='tls://8.8.4.4'  # Google DNS over TLS
-#uci set passwall2.@global[0].remote_dns_ipv6='tls://2001:4860:4860::8844'  # Google IPv6
-#uci set passwall2.@global[0].dns_hijack='1'  # Force all DNS through proxy
-
-# ===== Iranian Network Optimizations =====
-#uci set passwall2.@global[0].proxy_udp='1'  # UDP forwarding (VoIP/Video)
-#uci set passwall2.@global[0].buffer_size='65535'  # Bypass QoS throttling
-#uci set passwall2.@global[0].fast_open='1'  # TCP Fast Open (reduces latency)
-
-# Iranian domains use local DNS
-#uci set passwall2.@domain_forward[0]='domain_forward'
-#uci set passwall2.@domain_forward[0].domain='~ir,~mci.ir,~irancell.ir'
-#uci set passwall2.@domain_forward[0].dns='178.22.122.100'  # Shecan DNS
-
   # Save and apply
 uci commit passwall2
 echo -e "${GREEN}** Passwall Configured ** ${NC}"
