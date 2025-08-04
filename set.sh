@@ -51,7 +51,7 @@ ntpd -n -q -p ir.pool.ntp.org || {
     echo -e "${RED}NTP sync failed again. Please check DNS/network.${NC}"
   }
 }
-date
+echo -e "${CYAN}$(date)${NC}"
 
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
