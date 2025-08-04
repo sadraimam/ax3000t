@@ -31,6 +31,10 @@ uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.dns='8.8.4.4 1.1.1.1' 
 uci set network.wan6.dns='2001:4860:4860::8844 2606:4700:4700::1111'
+  # Block DNS leaks via DHCP (common in Iran)
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci set dhcp.@dnsmasq[0].localuse='1'
+uci commit dhcp
 uci commit system
 uci commit network
 /sbin/reload_config
@@ -171,7 +175,7 @@ uci set passwall2.@global_forwarding[0].udp_redir_ports='1:65535'
 uci set passwall2.@global[0].remote_dns='8.8.4.4'
 uci set passwall2.@global[0].remote_dns_ipv6='https://dns.google/dns-query'
 
-# Delete unused rules
+  # Delete unused rules
 uci delete passwall2.GooglePlay
 uci delete passwall2.Netflix
 uci delete passwall2.OpenAI
@@ -189,7 +193,7 @@ uci set passwall2.Direct=shunt_rules
 uci set passwall2.Direct.remarks='IRAN'
 uci set passwall2.Direct.network='tcp,udp'
 
-# Optimized IP List (includes geoip:ir + all private/special ranges)
+  # Optimized IP List (includes geoip:ir + all private/special ranges)
 uci set passwall2.Direct.ip_list='geoip:ir
 0.0.0.0/8
 10.0.0.0/8
@@ -220,7 +224,7 @@ fc00::/7
 fe80::/10
 ff00::/8'
 
-# Improved Domain List: geo-based + known local portals
+  # Improved Domain List: geo-based + known local portals
 uci set passwall2.Direct.domain_list='geosite:ir
 geosite:category-ir
 full:my.irancell.ir
@@ -229,22 +233,22 @@ full:login.tci.ir
 full:local.tci.ir
 regexp:^.+\.ir$'
 
-# Optional: Set default routing to proxy for all other traffic
+  # Optional: Set default routing to proxy for all other traffic
 #uci set passwall2.default_policy='proxy'
 
-# Optional: Split DNS resolvers
+  # Optional: Split DNS resolvers
 #uci set passwall2.dns.direct_dns='178.22.122.100,185.51.200.2'
 #uci set passwall2.dns.proxy_dns='https://dns.google/dns-query'
 
-# Optional: Force DNS hijack to prevent leaks
+  # Optional: Force DNS hijack to prevent leaks
 #uci set passwall2.global.dns_mode='tun'
 #uci set passwall2.global.redirect_dns='1'
 
-# Enable auto-update of geosite/geoip lists
+  # Enable auto-update of geosite/geoip lists
 #uci set passwall2.auto_update='1'
 #uci set passwall2.auto_update_time='24'
 
-# Save and apply
+  # Save and apply
 uci commit passwall2
 echo -e "${GREEN}** Passwall Configured ** ${NC}"
 
