@@ -29,8 +29,8 @@ uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
-uci set network.wan.dns='8.8.4.4'
-uci set network.wan6.dns='2001:4860:4860::8888 2001:4860:4860::8844'
+uci set network.wan.dns='8.8.4.4 1.1.1.1' 
+uci set network.wan6.dns='2001:4860:4860::8844 2606:4700:4700::1111'
 uci commit system
 uci commit network
 /sbin/reload_config
