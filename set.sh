@@ -39,6 +39,7 @@ uci set dhcp.@dnsmasq[0].localuse='1'
 uci commit dhcp
 /etc/init.d/dnsmasq restart
 /sbin/reload_config
+sleep 5
 echo -e "${GREEN}System Initialized! ${NC}"
 
 # Force NTP resync
