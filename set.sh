@@ -37,15 +37,16 @@ uci set dhcp.@dnsmasq[0].noresolv='1'
 uci set dhcp.@dnsmasq[0].localuse='1'
 uci commit dhcp
 /sbin/reload_config
+/etc/init.d/dnsmasq restart
 echo -e "${GREEN}System Initialized! ${NC}"
 
 # Force NTP resync
-#uci delete system.ntp.server
-#uci add_list system.ntp.server='ir.pool.ntp.org'
-#uci add_list system.ntp.server='0.openwrt.pool.ntp.org'
-#uci add_list system.ntp.server='1.openwrt.pool.ntp.org'
-#uci commit system
-#/etc/init.d/sysntpd restart
+uci delete system.ntp.server
+uci add_list system.ntp.server='ir.pool.ntp.org'
+uci add_list system.ntp.server='0.openwrt.pool.ntp.org'
+uci add_list system.ntp.server='1.openwrt.pool.ntp.org'
+uci commit system
+/etc/init.d/sysntpd restart
 # Force NTP sync (with retry fallback)
 echo -e "${YELLOW}Syncing time with NTP...${NC}"
 ntpd -n -q -p ir.pool.ntp.org || {
