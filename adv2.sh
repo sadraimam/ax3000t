@@ -5,7 +5,178 @@ echo "=== ⚙️ Applying Full Iran-Specific PassWall2 Configuration with IPv6 S
 
 # Backup current configuration
 BACKUP_DIR="/etc/config_backup_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"#!/bin/sh
+set -e  # Exit immediately on error
+
+echo "=== ⚙️ Applying Iran-Optimized PassWall2 Configuration with IPv6 Support ==="
+
+# Backup current configuration
+BACKUP_DIR="/etc/config_backup_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
+cp /etc/config/network "$BACKUP_DIR" || echo "Warning: Failed to backup network config"
+cp /etc/config/dhcp "$BACKUP_DIR" || echo "Warning: Failed to backup DHCP config"
+cp /etc/config/passwall2 "$BACKUP_DIR" || echo "Warning: Failed to backup PassWall2 config"
+cp /etc/config/system "$BACKUP_DIR" || echo "Warning: Failed to backup system config"
+cp /etc/config/firewall "$BACKUP_DIR" || echo "Warning: Failed to backup firewall config"
+
+# Set timezone to Tehran
+uci set system.@system[0].zonename='Asia/Tehran'
+uci set system.@system[0].timezone='<+0330>-3:30'
+uci commit system
+
+# Disable ISP DNS on WAN (both IPv4 and IPv6)
+uci set network.wan.peerdns='0'
+uci set network.wan6.peerdns='0'
+uci delete network.wan.dns
+uci delete network.wan6.dns
+if ! uci commit network; then
+    echo "Error: Failed to commit network changes" >&2
+    exit 1
+fi
+
+# Configure DNSMasq for local resolution only
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci set dhcp.@dnsmasq[0].localuse='1'
+uci set dhcp.@dnsmasq[0].cachesize='10000'
+uci set dhcp.@dnsmasq[0].rebind_protection='0'  # For Iranian CDNs
+uci set dhcp.@dnsmasq[0].boguspriv='0'
+uci set dhcp.@dnsmasq[0].filter_aaaa='0'  # Enable IPv6
+uci set dhcp.@dnsmasq[0].server='127.0.0.1#7913'  # PassWall2 DNS
+
+# Configure DHCP for IPv4/IPv6
+uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # IPv4 DNS
+uci add_list dhcp.lan.dhcp_option='6,fd00::1'  # IPv6 DNS
+uci set dhcp.lan.ra='server'
+uci set dhcp.lan.dhcpv6='server'
+uci set dhcp.lan.ra_management='1'
+uci add_list dhcp.lan.dns='fd00::1'
+
+# Configure PassWall2 DNS with DoH
+uci -q delete passwall2.@dns[0]
+uci add passwall2 dns
+uci set passwall2.@dns[0].enabled='1'
+uci set passwall2.@dns[0].dns_mode='fake-dns'
+uci set passwall2.@dns[0].remote_dns='https://dns.google/dns-query,https://cloudflare-dns.com/dns-query'
+uci set passwall2.@dns[0].fallback_dns='178.22.122.100,185.51.200.2'
+uci set passwall2.@dns[0].default_dns='local'
+uci set passwall2.@dns[0].disable_ipv6='0'  # Enable IPv6
+
+# Enhanced DoH settings
+uci set passwall2.@dns[0].doh_host='dns.google,cloudflare-dns.com'
+uci set passwall2.@dns[0].doh_path='/dns-query,/dns-query'
+uci set passwall2.@dns[0].dns_cache='1'
+uci set passwall2.@dns[0].dns_cache_timeout='7200'
+
+# Port exclusions for compatibility
+uci -q delete passwall2.@global_forwarding[0]
+uci add passwall2 global_forwarding
+uci set passwall2.@global_forwarding[0].tcp_no_redir_ports='25,110,465,587,993,995'
+uci set passwall2.@global_forwarding[0].udp_no_redir_ports='123,1194,51820'
+
+# Access control for local IPs and Iranian domains
+IRAN_DIRECT_HOSTS='ir,iran.ir,ac.ir,co.ir,org.ir,net.ir,sch.ir,id.ir,gov.ir,bank.ir,shaparak.ir,dl.music-fa.com,dl.songsara.net,digikala.com,snapp.ir,divar.ir,tapsi.ir,alibaba.ir,torob.com,setare.com,tamin.ir,mci.ir,mtnirancell.ir,shatel.ir,irancell.ir,hamrahcard.ir,rightel.ir,hiweb.ir,mellatbank.com,samanbank.com,parsian-bank.com,bankmaskan.ir,bmi.ir,sb24.com,enbank.net,ayandeh.com,bsi.ir,banksepah.ir,postbank.ir'
+
+uci -q delete passwall2.@access_control[0]
+uci add passwall2 access_control
+uci set passwall2.@access_control[0].direct_hosts="$IRAN_DIRECT_HOSTS"
+uci set passwall2.@access_control[0].direct_ip='10.0.0.0/8,192.168.0.0/16,127.0.0.0/8,::1/128,fc00::/7,fd00::/8'
+
+# Auto-switch for failover
+uci -q delete passwall2.@auto_switch[0]
+uci add passwall2 auto_switch
+uci set passwall2.@auto_switch[0].enabled='1'
+uci set passwall2.@auto_switch[0].testing_url='https://www.google.com/generate_204'
+uci set passwall2.@auto_switch[0].timeout='5'
+uci set passwall2.@auto_switch[0].try_count='2'
+uci set passwall2.@auto_switch[0].node_timeout='5'
+uci set passwall2.@auto_switch[0].connectivity_test_mode='http'
+
+# Shunt rules for Iranian domains
+uci -q delete passwall2.@shunt_rules[0]
+uci add passwall2 shunt_rules
+uci set passwall2.@shunt_rules[-1].name='IR Sites'
+uci set passwall2.@shunt_rules[-1].domain_list="$IRAN_DIRECT_HOSTS"
+uci set passwall2.@shunt_rules[-1].proxy_mode='direct'
+
+uci -q delete passwall2.@shunt_rules[1]
+uci add passwall2 shunt_rules
+uci set passwall2.@shunt_rules[-1].name='Default'
+uci set passwall2.@shunt_rules[-1].proxy_mode='default'
+
+# Main shunt config
+uci -q delete passwall2.@shunt[0]
+uci add passwall2 shunt
+uci set passwall2.@shunt[0].main_node='@auto_switch[0]'
+
+# Enable IPv6 forwarding
+uci set network.globals.ula_prefix='fd00::/48'
+uci set firewall.@defaults[0].forward='ACCEPT'
+uci set firewall.@defaults[0].fullcone6='1'
+
+# Kill switch rule
+uci -q delete firewall.passwall2_killswitch
+uci set firewall.passwall2_killswitch=rule
+uci set firewall.passwall2_killswitch.name='KillSwitch'
+uci set firewall.passwall2_killswitch.src='wan'
+uci set firewall.passwall2_killswitch.dest='*'
+uci set firewall.passwall2_killswitch.proto='all'
+uci set firewall.passwall2_killswitch.target='DROP'
+uci set firewall.passwall2_killswitch.enabled='1'
+
+# Block IRGC ASNs
+uci -q delete firewall.irgc_block
+uci set firewall.irgc_block=rule
+uci set firewall.irgc_block.name='Block IRGC ASN'
+uci set firewall.irgc_block.src='lan'
+uci set firewall.irgc_block.dest='wan'
+uci set firewall.irgc_block.dest_ip='185.147.160.0/22 185.173.104.0/22 185.49.104.0/22'
+uci set firewall.irgc_block.proto='all'
+uci set firewall.irgc_block.target='REJECT'
+
+# Apply all changes
+if ! uci commit; then
+    echo "Error: Failed to commit changes" >&2
+    exit 1
+fi
+
+# Restart services with verification
+restart_service() {
+    echo "Restarting $1..."
+    if /etc/init.d/$1 restart; then
+        echo "✅ $1 restarted successfully"
+        return 0
+    else
+        echo "❌ $1 restart failed!" >&2
+        return 1
+    fi
+}
+
+restart_service network
+sleep 2
+restart_service dnsmasq
+sleep 2
+restart_service passwall2
+sleep 2
+restart_service firewall
+
+echo "
+✅ Iran-optimized configuration applied successfully!
+=== Configuration Summary ===
+Timezone: Asia/Tehran (UTC+3:30)
+DNS Mode: FakeDNS + DoH (Encrypted)
+- Iranian domains: Direct via Shecan
+- Global traffic: DoH via Google/Cloudflare
+IPv6 Support: Fully enabled
+Security Features:
+- Kill switch enabled
+- IRGC ASN blocking
+- Port exclusions for email/VPN
+Performance:
+- Auto-switch failover (5s timeout)
+- DNS caching (2 hours)
+- Shunt routing for Iranian domains
+Backup Location: $BACKUP_DIR
+"
 cp /etc/config/network "$BACKUP_DIR" || echo "Warning: Failed to backup network config"
 cp /etc/config/dhcp "$BACKUP_DIR" || echo "Warning: Failed to backup DHCP config"
 cp /etc/config/passwall2 "$BACKUP_DIR" || echo "Warning: Failed to backup PassWall2 config"
