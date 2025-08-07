@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Backup current configuration
+BACKUP_DIR="/etc/config_backup_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+cp /etc/config/network "$BACKUP_DIR"
+cp /etc/config/dhcp "$BACKUP_DIR"
+cp /etc/config/passwall2 "$BACKUP_DIR"
+
 # Disable ISP DNS on WAN
 uci set network.wan.peerdns='0'
 uci delete network.wan.dns
@@ -9,17 +16,23 @@ uci commit network
 uci set dhcp.@dnsmasq[0].noresolv='1'
 uci set dhcp.@dnsmasq[0].localuse='1'
 uci set dhcp.@dnsmasq[0].cachesize='10000'
-uci set dhcp.@dnsmasq[0].rebind_protection='0'  # Required for Iranian CDNs
+uci set dhcp.@dnsmasq[0].rebind_protection='0'  # Disabled for Iranian CDNs compatibility
 uci set dhcp.@dnsmasq[0].strictorder='1'  # Try servers in order
 uci set dhcp.@dnsmasq[0].allservers='1'   # Enable fallback
 uci set dhcp.@dnsmasq[0].confdir='/etc/dnsmasq.d'
 uci set dhcp.@dnsmasq[0].cachelocal='1'  # Cache local domains
+uci set dhcp.@dnsmasq[0].boguspriv='0'   # Disable for Iranian private domains
 
 # Create config directory
 mkdir -p /etc/dnsmasq.d
+chmod 755 /etc/dnsmasq.d
 
 # Iranian DNS Configuration (Shecan)
 cat << "EOF" > /etc/dnsmasq.d/iran-domains.conf
+# Iranian domains DNS configuration
+# Primary DNS: Shecan (178.22.122.100)
+# Backup DNS: 403.online (185.51.200.2)
+
 # Primary Iranian DNS
 server=/.ir/178.22.122.100
 server=/.co.ir/178.22.122.100
@@ -69,7 +82,8 @@ EOF
 
 # Global DNS Configuration with Proxy Priority
 cat << "EOF" > /etc/dnsmasq.d/global-dns.conf
-# First try PassWall2 DNS proxy
+# DNS configuration with proxy priority
+# First try PassWall2 DNS proxy (port 7913)
 server=/#/127.0.0.1#7913
 
 # Fallback to global DNS when proxy is disabled
@@ -139,14 +153,35 @@ bypass:
       - "digikala.com"
       - "snapp.ir"
       - "divar.ir"
+      - "tapsi.ir"
+      - "alibaba.ir"
+      - "torob.com"
+      - "setare.com"
+      - "tamin.ir"
+      - "iran.ir"
+      - "mellatbank.com"
+      - "samanbank.com"
+      - "parsian-bank.com"
+      - "bankmaskan.ir"
+      - "bmi.ir"
+      - "sb24.com"
+      - "enbank.net"
+      - "ayandeh.com"
+      - "bsi.ir"
+      - "banksepah.ir"
+      - "postbank.ir"
     target: DIRECT
 EOF
 
 # Restart services
-/etc/init.d/dnsmasq restart
 /etc/init.d/network reload
+sleep 2
+/etc/init.d/dnsmasq restart
+sleep 2
 /etc/init.d/passwall2 restart
 
 echo "DoH Configuration Applied Successfully!"
-echo "DNS Mode: fakeip + DoH with Google primary and Cloudflare backup and Enhanced Iranian domain handling"
+echo "DNS Mode: fakeip + DoH with Google primary and Cloudflare backup"
+echo "Iranian domains are handled by local DNS servers"
+echo "Last known Configuration backed up to: $BACKUP_DIR"
 
