@@ -14,6 +14,7 @@ uci set dhcp.@dnsmasq[0].rebind_protection='0'  # Required for Iranian CDNs
 uci set dhcp.@dnsmasq[0].strictorder='1'  # Try servers in order
 uci set dhcp.@dnsmasq[0].allservers='1'   # Enable fallback
 uci set dhcp.@dnsmasq[0].confdir='/etc/dnsmasq.d'
+uci set dhcp.@dnsmasq[0].cachelocal='1'  # Cache local domains
 
 # Create config directory
 mkdir -p /etc/dnsmasq.d
@@ -31,20 +32,31 @@ server=/.sch.ir/178.22.122.100
 server=/mci.ir/178.22.122.100
 server=/mtnirancell.ir/178.22.122.100
 server=/shatel.ir/178.22.122.100
+server=/irancell.ir/178.22.122.100
+server=/hamrahcard.ir/178.22.122.100
+server=/rightel.ir/178.22.122.100
 server=/mellatbank.com/178.22.122.100
 server=/samanbank.com/178.22.122.100
 server=/parsian-bank.com/178.22.122.100
 server=/bankmaskan.ir/178.22.122.100
 server=/bmi.ir/178.22.122.100
+server=/sb24.com/178.22.122.100
+server=/enbank.net/178.22.122.100
 server=/digikala.com/178.22.122.100
 server=/snapp.ir/178.22.122.100
 server=/divar.ir/178.22.122.100
-server=/irancell.ir/178.22.122.100
-server=/hamrahcard.ir/178.22.122.100
+server=/tapsi.ir/178.22.122.100
+server=/alibaba.ir/178.22.122.100
+server=/torob.com/178.22.122.100
 
 # Backup Iranian DNS
 server=/ir/185.51.200.2
 server=/co.ir/185.51.200.2
+server=/ac.ir/185.51.200.2
+server=/gov.ir/185.51.200.2
+server=/org.ir/185.51.200.2
+server=/net.ir/185.51.200.2
+server=/sch.ir/185.51.200.2
 EOF
 
 # Global DNS Configuration with Proxy Priority
@@ -62,18 +74,21 @@ EOF
 # Configure DHCP
 uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # Router as DNS
 
-# Configure PassWall2 for optimal Iran performance
+# Configure PassWall2 with enhanced caching
 uci set passwall2.@global[0].dns_mode='fakeip'
 uci set passwall2.@global[0].dns_proxy_mode='udp'
 uci set passwall2.@global[0].dns_listen='127.0.0.1'
 uci set passwall2.@global[0].dns_server='8.8.8.8'
 uci set passwall2.@global[0].dns_cache='1'
+uci set passwall2.@global[0].dns_cache_timeout='3600'  # 1-hour caching
+uci set passwall2.@global[0].dns_max_cache='5000'     # 5000 entries
 uci set passwall2.@global[0].remote_dns='8.8.8.8'
 uci set passwall2.@global[0].dns_query_strategy='prefer_ipv4'
 uci set passwall2.@global[0].dns_fakeip_range='192.168.3.0/24'
-
-# Enable automatic DNS routing
 uci set passwall2.@global[0].dns_auto='1'
+
+# Enable DNS prefetching for better performance
+uci set passwall2.@global[0].dns_prefetch='1'
 
 # Apply changes
 uci commit dhcp
@@ -87,24 +102,6 @@ uci commit passwall2
 echo "Optimized configuration applied!"
 echo "DNS Mode: fakeip + UDP proxy with automatic routing"
 
----------------------------------------------
-
-uci delete network.lan.dns
-uci delete dhcp.@dnsmasq[0].server
-uci commit
-
-uci set network.lan.dns='8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1'
-uci set network.lan.peerdns='0'
-uci commit network
-/etc/init.d/network restart
-
-uci set dhcp.@dnsmasq[0].noresolv='1'
-uci add_list dhcp.@dnsmasq[0].server='8.8.8.8'
-uci add_list dhcp.@dnsmasq[0].server='8.8.4.4'
-uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
-uci add_list dhcp.@dnsmasq[0].server='1.0.0.1'
-uci commit dhcp
-/etc/init.d/dnsmasq restart
 
 ---------------------------------------------------------------
 
