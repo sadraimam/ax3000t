@@ -165,7 +165,7 @@ uci set passwall2.@global_forwarding[0].udp_redir_ports='1:65535'
 uci set passwall2.@global[0].remote_dns='8.8.4.4'
 uci set passwall2.@global[0].remote_dns_ipv6='https://dns.google/dns-query'
 
-  # Delete unused rules
+  # Delete unused rules and sub
 uci delete passwall2.GooglePlay
 uci delete passwall2.Netflix
 uci delete passwall2.OpenAI
