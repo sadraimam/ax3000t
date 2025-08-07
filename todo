@@ -74,33 +74,67 @@ EOF
 # Configure DHCP
 uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # Router as DNS
 
-# Configure PassWall2 with enhanced caching
+# Configure PassWall2 with DoH and enhanced caching
 uci set passwall2.@global[0].dns_mode='fakeip'
-uci set passwall2.@global[0].dns_proxy_mode='udp'
+uci set passwall2.@global[0].dns_proxy_mode='doh'
+uci set passwall2.@global[0].doh_url='https://dns.google/dns-query'
 uci set passwall2.@global[0].dns_listen='127.0.0.1'
-uci set passwall2.@global[0].dns_server='8.8.8.8'
 uci set passwall2.@global[0].dns_cache='1'
-uci set passwall2.@global[0].dns_cache_timeout='3600'  # 1-hour caching
-uci set passwall2.@global[0].dns_max_cache='5000'     # 5000 entries
-uci set passwall2.@global[0].remote_dns='8.8.8.8'
+uci set passwall2.@global[0].dns_cache_timeout='7200'  # 2-hour caching
+uci set passwall2.@global[0].dns_max_cache='10000'    # 10,000 entries
+uci set passwall2.@global[0].remote_dns='https://dns.google/dns-query'
 uci set passwall2.@global[0].dns_query_strategy='prefer_ipv4'
 uci set passwall2.@global[0].dns_fakeip_range='192.168.3.0/24'
 uci set passwall2.@global[0].dns_auto='1'
 
-# Enable DNS prefetching for better performance
+# Enhanced DoH settings for Iran
+uci set passwall2.@global[0].doh_host='dns.google'
+uci set passwall2.@global[0].doh_path='/dns-query'
+uci set passwall2.@global[0].doh_sni='dns.google'
+uci set passwall2.@global[0].doh_ipversion='prefer_ipv4'
+
+# Enable DNS prefetching and persistent caching
 uci set passwall2.@global[0].dns_prefetch='1'
+uci set passwall2.@global[0].dns_cache_persistent='1'
 
 # Apply changes
 uci commit dhcp
 uci commit passwall2
+
+# Create DoH bypass for Iranian domains to prevent leaks
+cat << "EOF" > /etc/passwall2/999_bypass_iran_dns.yaml
+bypass:
+  - name: "Iranian DNS Domains"
+    type: domain
+    domain:
+      - "ir"
+      - "co.ir"
+      - "ac.ir"
+      - "gov.ir"
+      - "org.ir"
+      - "net.ir"
+      - "sch.ir"
+      - "id.ir"
+      - "mci.ir"
+      - "mtnirancell.ir"
+      - "shatel.ir"
+      - "irancell.ir"
+      - "hamrahcard.ir"
+      - "rightel.ir"
+      - "hiweb.ir"
+      - "digikala.com"
+      - "snapp.ir"
+      - "divar.ir"
+    target: DIRECT
+EOF
 
 # Restart services
 /etc/init.d/dnsmasq restart
 /etc/init.d/network reload
 /etc/init.d/passwall2 restart
 
-echo "Optimized configuration applied!"
-echo "DNS Mode: fakeip + UDP proxy with automatic routing"
+echo "DoH Configuration Applied Successfully!"
+echo "DNS Mode: fakeip + DoH with enhanced Iranian domain handling"
 
 
 ---------------------------------------------------------------
