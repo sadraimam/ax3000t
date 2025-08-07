@@ -8,9 +8,11 @@ cp /etc/config/network "$BACKUP_DIR" || echo "Warning: Failed to backup network 
 cp /etc/config/dhcp "$BACKUP_DIR" || echo "Warning: Failed to backup DHCP config"
 cp /etc/config/passwall2 "$BACKUP_DIR" || echo "Warning: Failed to backup PassWall2 config"
 
-# Disable ISP DNS on WAN
+# Disable ISP DNS on WAN (both IPv4 and IPv6)
 uci set network.wan.peerdns='0'
+uci set network.wan6.peerdns='0'
 uci delete network.wan.dns
+uci delete network.wan6.dns
 if ! uci commit network; then
     echo "Error: Failed to commit network changes" >&2
     exit 1
@@ -26,6 +28,7 @@ uci set dhcp.@dnsmasq[0].allservers='1'   # Enable fallback
 uci set dhcp.@dnsmasq[0].confdir='/etc/dnsmasq.d'
 uci set dhcp.@dnsmasq[0].cachelocal='1'  # Cache local domains
 uci set dhcp.@dnsmasq[0].boguspriv='0'   # Disable for Iranian private domains
+uci set dhcp.@dnsmasq[0].filter_aaaa='0'  # Enable AAAA (IPv6) records
 
 # Create config directory
 mkdir -p /etc/dnsmasq.d || exit 1
@@ -93,15 +96,24 @@ cat << "EOF" > /etc/dnsmasq.d/global-dns.conf
 # First try PassWall2 DNS proxy (port 7913)
 server=/#/127.0.0.1#7913
 
-# Fallback to global DNS when proxy is disabled
+# Fallback to global DNS when proxy is disabled (IPv4 and IPv6)
 server=/#/8.8.8.8
 server=/#/8.8.4.4
+server=/#/2001:4860:4860::8888       # Google IPv6
+server=/#/2001:4860:4860::8844       # Google IPv6
 server=/#/1.1.1.1
 server=/#/1.0.0.1
+server=/#/2606:4700:4700::1111       # Cloudflare IPv6
+server=/#/2606:4700:4700::1001       # Cloudflare IPv6
 EOF
 
-# Configure DHCP
-uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # Router as DNS
+# Configure DHCP for both IPv4 and IPv6
+uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # Router as DNS for IPv4
+uci add_list dhcp.lan.dhcp_option='6,fd00::1'  # Router as DNS for IPv6
+uci set dhcp.lan.ra='server'
+uci set dhcp.lan.dhcpv6='server'
+uci set dhcp.lan.ra_management='1'
+uci add_list dhcp.lan.dns='fd00::1'             # Router as DNS for IPv6 SLAAC
 
 # Configure PassWall2 with DoH and enhanced caching
 DOH_SERVERS='https://dns.google/dns-query,https://cloudflare-dns.com/dns-query'
@@ -118,6 +130,7 @@ uci set passwall2.@global[0].remote_dns="$DOH_SERVERS"
 uci set passwall2.@global[0].dns_query_strategy='prefer_ipv4'
 uci set passwall2.@global[0].dns_fakeip_range='192.168.3.0/24'
 uci set passwall2.@global[0].dns_auto='1'
+uci set passwall2.@global[0].ipv6_tproxy='1'  # Enable IPv6 transparent proxy
 
 # Enhanced DoH settings
 uci set passwall2.@global[0].doh_host="$DOH_HOSTS"
@@ -191,6 +204,12 @@ bypass:
     target: DIRECT
 EOF
 
+# Enable IPv6 forwarding
+uci set network.globals.ula_prefix='fd00::/48'  # Use unique local address range
+uci set firewall.@defaults[0].forward='ACCEPT'
+uci set firewall.@defaults[0].fullcone6='1'     # Enable IPv6 full-cone NAT
+uci commit firewall
+
 # Restart services with status checks
 echo "Restarting network..."
 /etc/init.d/network reload && echo "Network reloaded" || echo "Network reload failed"
@@ -206,6 +225,7 @@ echo "Restarting PassWall2..."
 echo "
 DoH Configuration Applied Successfully!
 DNS Mode: fakeip + DoH with Google primary and Cloudflare backup
+IPv6 Support: Enabled
 Iranian domains are handled by local DNS servers
 Last known configuration backed up to: $BACKUP_DIR
 "
