@@ -1,16 +1,20 @@
 #!/bin/sh
+set -e  # Exit immediately on error
 
 # Backup current configuration
 BACKUP_DIR="/etc/config_backup_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
-cp /etc/config/network "$BACKUP_DIR"
-cp /etc/config/dhcp "$BACKUP_DIR"
-cp /etc/config/passwall2 "$BACKUP_DIR"
+cp /etc/config/network "$BACKUP_DIR" || echo "Warning: Failed to backup network config"
+cp /etc/config/dhcp "$BACKUP_DIR" || echo "Warning: Failed to backup DHCP config"
+cp /etc/config/passwall2 "$BACKUP_DIR" || echo "Warning: Failed to backup PassWall2 config"
 
 # Disable ISP DNS on WAN
 uci set network.wan.peerdns='0'
 uci delete network.wan.dns
-uci commit network
+if ! uci commit network; then
+    echo "Error: Failed to commit network changes" >&2
+    exit 1
+fi
 
 # Configure DNSMasq
 uci set dhcp.@dnsmasq[0].noresolv='1'
@@ -24,7 +28,7 @@ uci set dhcp.@dnsmasq[0].cachelocal='1'  # Cache local domains
 uci set dhcp.@dnsmasq[0].boguspriv='0'   # Disable for Iranian private domains
 
 # Create config directory
-mkdir -p /etc/dnsmasq.d
+mkdir -p /etc/dnsmasq.d || exit 1
 chmod 755 /etc/dnsmasq.d
 
 # Iranian DNS Configuration (Shecan)
@@ -33,14 +37,17 @@ cat << "EOF" > /etc/dnsmasq.d/iran-domains.conf
 # Primary DNS: Shecan (178.22.122.100)
 # Backup DNS: 403.online (185.51.200.2)
 
-# Primary Iranian DNS
-server=/.ir/178.22.122.100
-server=/.co.ir/178.22.122.100
-server=/.ac.ir/178.22.122.100
-server=/.gov.ir/178.22.122.100
-server=/.org.ir/178.22.122.100
-server=/.net.ir/178.22.122.100
-server=/.sch.ir/178.22.122.100
+# Use consistent matching patterns for all domains
+server=/ir/178.22.122.100
+server=/co.ir/178.22.122.100
+server=/ac.ir/178.22.122.100
+server=/gov.ir/178.22.122.100
+server=/org.ir/178.22.122.100
+server=/net.ir/178.22.122.100
+server=/sch.ir/178.22.122.100
+server=/id.ir/178.22.122.100
+
+# Specific Iranian services
 server=/mci.ir/178.22.122.100
 server=/mtnirancell.ir/178.22.122.100
 server=/shatel.ir/178.22.122.100
@@ -70,7 +77,7 @@ server=/setare.com/178.22.122.100
 server=/tamin.ir/178.22.122.100
 server=/iran.ir/178.22.122.100
 
-# Backup Iranian DNS
+# Backup Iranian DNS (using same patterns as primary)
 server=/ir/185.51.200.2
 server=/co.ir/185.51.200.2
 server=/ac.ir/185.51.200.2
@@ -97,22 +104,25 @@ EOF
 uci set dhcp.lan.dhcp_option='6,192.168.1.1'  # Router as DNS
 
 # Configure PassWall2 with DoH and enhanced caching
+DOH_SERVERS='https://dns.google/dns-query,https://cloudflare-dns.com/dns-query'
+DOH_HOSTS='dns.google,cloudflare-dns.com'
+
 uci set passwall2.@global[0].dns_mode='fakeip'
 uci set passwall2.@global[0].dns_proxy_mode='doh'
-uci set passwall2.@global[0].doh_url='https://dns.google/dns-query,https://cloudflare-dns.com/dns-query'
+uci set passwall2.@global[0].doh_url="$DOH_SERVERS"
 uci set passwall2.@global[0].dns_listen='127.0.0.1'
 uci set passwall2.@global[0].dns_cache='1'
 uci set passwall2.@global[0].dns_cache_timeout='7200'  # 2-hour caching
 uci set passwall2.@global[0].dns_max_cache='10000'    # 10,000 entries
-uci set passwall2.@global[0].remote_dns='https://dns.google/dns-query,https://cloudflare-dns.com/dns-query'
+uci set passwall2.@global[0].remote_dns="$DOH_SERVERS"
 uci set passwall2.@global[0].dns_query_strategy='prefer_ipv4'
 uci set passwall2.@global[0].dns_fakeip_range='192.168.3.0/24'
 uci set passwall2.@global[0].dns_auto='1'
 
-# Enhanced DoH settings for Iran
-uci set passwall2.@global[0].doh_host='dns.google,cloudflare-dns.com'
+# Enhanced DoH settings
+uci set passwall2.@global[0].doh_host="$DOH_HOSTS"
 uci set passwall2.@global[0].doh_path='/dns-query,/dns-query'
-uci set passwall2.@global[0].doh_sni='dns.google,cloudflare-dns.com'
+uci set passwall2.@global[0].doh_sni="$DOH_HOSTS"
 uci set passwall2.@global[0].doh_ipversion='prefer_ipv4'
 
 # Enable DNS prefetching and persistent caching
@@ -126,10 +136,18 @@ uci set passwall2.@global[0].doh_lb_retry='2'
 uci set passwall2.@global[0].doh_lb_timeout='10'
 
 # Apply changes
-uci commit dhcp
-uci commit passwall2
+if ! uci commit dhcp; then
+    echo "Error: Failed to commit DHCP changes" >&2
+    exit 1
+fi
 
-# Create DoH bypass for Iranian domains to prevent leaks
+if ! uci commit passwall2; then
+    echo "Error: Failed to commit PassWall2 changes" >&2
+    exit 1
+fi
+
+# Create DoH bypass for Iranian domains
+mkdir -p /etc/passwall2 || exit 1
 cat << "EOF" > /etc/passwall2/999_bypass_iran_dns.yaml
 bypass:
   - name: "Iranian DNS Domains"
@@ -173,15 +191,21 @@ bypass:
     target: DIRECT
 EOF
 
-# Restart services
-/etc/init.d/network reload
+# Restart services with status checks
+echo "Restarting network..."
+/etc/init.d/network reload && echo "Network reloaded" || echo "Network reload failed"
 sleep 2
-/etc/init.d/dnsmasq restart
+
+echo "Restarting DNSMasq..."
+/etc/init.d/dnsmasq restart && echo "DNSMasq restarted" || echo "DNSMasq restart failed"
 sleep 2
-/etc/init.d/passwall2 restart
 
-echo "DoH Configuration Applied Successfully!"
-echo "DNS Mode: fakeip + DoH with Google primary and Cloudflare backup"
-echo "Iranian domains are handled by local DNS servers"
-echo "Last known Configuration backed up to: $BACKUP_DIR"
+echo "Restarting PassWall2..."
+/etc/init.d/passwall2 restart && echo "PassWall2 restarted" || echo "PassWall2 restart failed"
 
+echo "
+DoH Configuration Applied Successfully!
+DNS Mode: fakeip + DoH with Google primary and Cloudflare backup
+Iranian domains are handled by local DNS servers
+Last known configuration backed up to: $BACKUP_DIR
+"
