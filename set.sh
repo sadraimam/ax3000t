@@ -35,7 +35,6 @@ echo -e "${GREEN}Network Initialized! ${NC}"
 
 # Set Tehran timezone (IRST, UTC+3:30)
 uci set system.@system[0].zonename='Asia/Tehran'
-#uci set system.@system[0].timezone='<+0330>-3:30'
 uci set system.@system[0].timezone='IRST-3:30IRDT,IRST-3:30,M3.5.0/0,J79/0'
 uci commit system
 /etc/init.d/sysntpd restart
