@@ -25,17 +25,21 @@ else
 fi
 
 # Initialize
-uci set system.@system[0].zonename='Asia/Tehran'
-uci set system.@system[0].timezone='<+0330>-3:30'
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.dns='8.8.4.4 1.1.1.1' 
 uci set network.wan6.dns='2001:4860:4860::8844 2606:4700:4700::1111'
-uci commit system
 uci commit network
-uci commit
 /sbin/reload_config
-echo -e "${GREEN}System Initialized! ${NC}"
+echo -e "${GREEN}Network Initialized! ${NC}"
+
+uci set system.@system[0].zonename='Asia/Tehran'
+uci set system.@system[0].timezone='<+0330>-3:30'
+uci commit system
+/etc/init.d/sysntpd restart
+echo -e "${GREEN}Time/Date Initialized! ${NC}"
+
+uci commit
 
 # Force NTP sync (with retry fallback)
 echo -e "${YELLOW}Syncing time with NTP...${NC}"
@@ -46,6 +50,8 @@ ntpd -n -q -p ir.pool.ntp.org || {
   }
 }
 echo -e "${CYAN}$(date)${NC}"
+
+exit 0
 
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
