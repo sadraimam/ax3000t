@@ -24,7 +24,7 @@ else
     echo -e "${GREEN}Configuring System...${NC}"
 fi
 
-# Initialize
+# Initialize network DNS
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.dns='8.8.4.4 1.1.1.1' 
@@ -33,13 +33,15 @@ uci commit network
 /sbin/reload_config
 echo -e "${GREEN}Network Initialized! ${NC}"
 
+# Set Tehran timezone (IRST, UTC+3:30)
 uci set system.@system[0].zonename='Asia/Tehran'
-uci set system.@system[0].timezone='<+0330>-3:30'
+#uci set system.@system[0].timezone='<+0330>-3:30'
+uci set system.@system[0].timezone='IRST-3:30IRDT,IRST-3:30,M3.5.0/0,J79/0'
 uci commit system
 /etc/init.d/sysntpd restart
 echo -e "${GREEN}Time/Date Initialized! ${NC}"
 
-uci commit
+#uci commit
 
 # Force NTP sync (with retry fallback)
 echo -e "${YELLOW}Syncing time with NTP...${NC}"
