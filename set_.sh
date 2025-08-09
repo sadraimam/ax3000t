@@ -27,20 +27,19 @@ fi
 HAS_IPV6=0
 if ip -6 addr show scope global | grep -q 'inet6'; then
     HAS_IPV6=1
-    echo -e "${GREEN}IPv6 detected. IPv6 configuration will be applied.${NC}"
+    echo -e "${GREEN}IPv6 detected.${NC}"
 else
-    echo -e "${YELLOW}No IPv6 detected. Skipping IPv6, DNS, DHCP, and Passwall IPv6 configs.${NC}"
+    echo -e "${YELLOW}No IPv6 detected.${NC}"
     # Disable IPv6 firewall rules
     uci set firewall.@defaults[0].disable_ipv6=1
     uci commit firewall
 fi
 
-# Initialize Network (IPv4 always, IPv6 only if detected)
+# Initialize Network
 uci del network.wan.dns 2>/dev/null
 uci set network.wan.peerdns="0"
 uci add_list network.wan.dns="8.8.4.4"
 uci add_list network.wan.dns="1.1.1.1"
-
 if [ $HAS_IPV6 -eq 1 ]; then
     uci del network.wan6.dns 2>/dev/null
     uci set network.wan6.peerdns="0"
@@ -78,19 +77,10 @@ ntpd -n -q -p ir.pool.ntp.org || {
 }
 echo -e "${CYAN}$(date)${NC}"
 
-# Add Passwall Feeds with key validation
-TMP_KEY="/tmp/passwall.pub"
-wget -O "$TMP_KEY" https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
-if grep -q "BEGIN PUBLIC KEY" "$TMP_KEY"; then
-    opkg-key add "$TMP_KEY"
-    echo -e "${GREEN}Passwall key added successfully.${NC}"
-else
-    echo -e "${RED}Passwall key validation failed! Exiting.${NC}"
-    rm -f "$TMP_KEY"
-    exit 1
-fi
-rm -f "$TMP_KEY"
-
+# Add Passwall Feeds
+wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
+opkg-key add /tmp/passwall.pub
+rm -f /tmp/passwall.pub
 > /etc/opkg/customfeeds.conf
 read release arch <<EOF
 $(. /etc/openwrt_release; echo ${DISTRIB_RELEASE%.*} $DISTRIB_ARCH)
