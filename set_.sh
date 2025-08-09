@@ -98,22 +98,24 @@ done
 echo -e "${YELLOW}Updating Packages...${NC}"
 opkg update
 
-# Function to install from tmp (safer package handling)
+# Function to install from tmp
 install_tmp() {
-  pkg="$1"
+  pkg="$1"  
+  # Check if package is already installed
   if opkg list-installed | grep -q "^$pkg - "; then
     echo -e "${GREEN}$pkg is already installed. Skipping.${NC}"
     return 0
   fi
   echo -e "${YELLOW}Installing $pkg ...${NC}"
   cd /tmp || return 1
-  rm -f ${pkg}_*.ipk
+  rm -f ${pkg}_*.ipk  # Clean up any previous downloads
+  # Download with retry logic
   retry=3
   while [ $retry -gt 0 ]; do
     opkg download "$pkg"
-    ipk_file=$(find . -maxdepth 1 -type f -name "${pkg}_*.ipk" | head -n1)
-    if [ -n "$ipk_file" ]; then
-      opkg install "$ipk_file" && rm -f "$ipk_file" && return 0
+    # Check if download succeeded (exit code 0 AND file exists)
+    if [ $? -eq 0 ] && ls ${pkg}_*.ipk >/dev/null 2>&1; then
+      break
     fi
     retry=$((retry - 1))
     if [ $retry -gt 0 ]; then
@@ -121,8 +123,24 @@ install_tmp() {
       sleep 5
     fi
   done
-  echo -e "${RED}Failed to install $pkg after multiple attempts.${NC}"
-  return 1
+  # Final verification after download attempts
+  if ! ls ${pkg}_*.ipk >/dev/null 2>&1; then
+    echo -e "${RED}Failed to download $pkg after multiple attempts${NC}"
+    return 1
+  fi
+  # Install package
+  ipk_file=$(ls -t ${pkg}_*.ipk | head -n1)
+  opkg install "$ipk_file"
+  install_status=$?
+  # Cleanup regardless of installation status
+  rm -f ${pkg}_*.ipk
+  if [ $install_status -ne 0 ]; then
+    echo -e "${RED}Installation failed for $pkg${NC}"
+  else
+    echo -e "${GREEN}Successfully installed $pkg${NC}"
+  fi  
+  sleep 2
+  return $install_status
 }
 
 # Main Install Sequence
@@ -134,6 +152,8 @@ install_tmp ipset
 install_tmp kmod-tun
 install_tmp kmod-nft-tproxy
 install_tmp kmod-nft-socket
+#install_tmp kmod-inet-diag
+#install_tmp kmod-netlink-diag
 install_tmp sing-box
 install_tmp hysteria
 
@@ -157,11 +177,11 @@ verify_installation "Hysteria" "/usr/bin/hysteria"
 
 # Passwall Patch
 wget -O /tmp/status.htm https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/status.htm
-[ -d /usr/lib/lua/luci/view/passwall2/global ] && cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
-[ -d /usr/lib64/lua/luci/view/passwall2/global ] && cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
+cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
+cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
 echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall2
 rm -f /tmp/status.htm
-echo -e "${GREEN}** Passwall Patched **${NC}"
+echo -e "${GREEN}** Passwall Patched ** ${NC}"
 
 # Passwall2 Settings (IPv4 always, IPv6 only if detected)
 uci set passwall2.@global_forwarding[0]=global_forwarding
@@ -232,7 +252,7 @@ regexp:^.+\.ir$'
 uci commit passwall2
 echo -e "${GREEN}** Passwall Configured **${NC}"
 
-# DNS Rebind Fix (only if IPv6 detected or DNS config applied)
+# DNS Rebind Fix
 uci set dhcp.@dnsmasq[0].rebind_domain='my.irancell.ir my.mci.ir login.tci.ir local.tci.ir 192.168.1.1.mci 192.168.1.1.irancell'
 uci commit dhcp
 /etc/init.d/dnsmasq restart
