@@ -147,4 +147,147 @@ install_tmp kmod-nft-socket
 install_tmp sing-box
 install_tmp hysteria
 
-# (Rest of your script remains unchanged)
+# Function to verify installation
+verify_installation() {
+    local name="$1"
+    local path="$2"
+    if [ -e "$path" ]; then
+        echo -e "${GREEN}${name} : INSTALLED!${NC}"
+    else
+        echo -e "${YELLOW}${name} : NOT INSTALLED!${NC}"
+    fi
+}
+
+# Verify installations
+verify_installation "dnsmasq-full" "/usr/lib/opkg/info/dnsmasq-full.control"
+verify_installation "Passwall2" "/etc/init.d/passwall2"
+verify_installation "XRAY" "/usr/bin/xray"
+verify_installation "Sing-box" "/usr/bin/sing-box"
+verify_installation "Hysteria" "/usr/bin/hysteria"
+
+# Passwall Patch
+wget -O /tmp/status.htm https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/status.htm
+[ -d /usr/lib/lua/luci/view/passwall2/global ] && cp /tmp/status.htm /usr/lib/lua/luci/view/passwall2/global/status.htm
+[ -d /usr/lib64/lua/luci/view/passwall2/global ] && cp /tmp/status.htm /usr/lib64/lua/luci/view/passwall2/global/status.htm
+echo "/usr/lib/lua/luci/view/passwall2/global/status.htm" >> /lib/upgrade/keep.d/luci-app-passwall2
+rm -f /tmp/status.htm
+echo -e "${GREEN}** Passwall Patched **${NC}"
+
+# Passwall2 Settings (IPv4 always, IPv6 only if detected)
+uci set passwall2.@global_forwarding[0]=global_forwarding
+uci set passwall2.@global_forwarding[0].tcp_no_redir_ports='disable'
+uci set passwall2.@global_forwarding[0].udp_no_redir_ports='disable'
+uci set passwall2.@global_forwarding[0].tcp_redir_ports='1:65535'
+uci set passwall2.@global_forwarding[0].udp_redir_ports='1:65535'
+uci set passwall2.@global[0].remote_dns='8.8.4.4'
+if [ $HAS_IPV6 -eq 1 ]; then
+    uci set passwall2.@global[0].remote_dns_ipv6='https://dns.google/dns-query'
+fi
+
+uci -q delete passwall2.GooglePlay
+uci -q delete passwall2.Netflix
+uci -q delete passwall2.OpenAI
+uci -q delete passwall2.China
+uci -q delete passwall2.QUIC
+uci -q delete passwall2.Proxy
+uci -q delete passwall2.UDP
+uci -q delete passwall2.@global_subscribe[0].filter_discard_list
+
+uci set passwall2.myshunt.Direct='_direct'
+uci set passwall2.myshunt.DirectGame='_direct'
+uci set passwall2.myshunt.remarks='MainShunt'
+
+uci set passwall2.Direct=shunt_rules
+uci set passwall2.Direct.remarks='IRAN'
+uci set passwall2.Direct.network='tcp,udp'
+
+uci set passwall2.Direct.ip_list='geoip:ir
+0.0.0.0/8
+10.0.0.0/8
+100.64.0.0/10
+127.0.0.0/8
+169.254.0.0/16
+172.16.0.0/12
+192.0.0.0/24
+192.0.2.0/24
+192.88.99.0/24
+192.168.0.0/16
+198.18.0.0/15
+198.51.100.0/24
+203.0.113.0/24
+224.0.0.0/4
+240.0.0.0/4
+255.255.255.255/32
+::/128
+::1/128
+::ffff:0:0:0/96
+64:ff9b::/96
+100::/64
+2001::/32
+2001:20::/28
+2001:db8::/32
+2002::/16
+fc00::/7
+fe80::/10
+ff00::/8'
+
+uci set passwall2.Direct.domain_list='geosite:ir
+geosite:category-ir
+full:my.irancell.ir
+full:my.mci.ir
+full:login.tci.ir
+full:local.tci.ir
+regexp:^.+\.ir$'
+
+uci commit passwall2
+echo -e "${GREEN}** Passwall Configured **${NC}"
+
+# DNS Rebind Fix (only if IPv6 detected or DNS config applied)
+uci set dhcp.@dnsmasq[0].rebind_domain='my.irancell.ir my.mci.ir login.tci.ir local.tci.ir 192.168.1.1.mci 192.168.1.1.irancell'
+uci commit dhcp
+/etc/init.d/dnsmasq restart
+echo -e "${GREEN}** DNS Rebind Fixed **${NC}"
+
+rm -f /root/set.sh
+/sbin/reload_config
+echo -e "${CYAN}** Installation Completed **${NC}"
+
+# Set Wifi
+uci set wireless.radio0.cell_density='0'
+uci set wireless.default_radio0.encryption='sae-mixed'
+uci set wireless.default_radio0.key='123456789'
+uci set wireless.default_radio0.ocv='0'
+uci set wireless.radio0.disabled='0'
+uci set wireless.radio1.cell_density='0'
+uci set wireless.default_radio1.encryption='sae-mixed'
+uci set wireless.default_radio1.key='123456789'
+uci set wireless.default_radio1.ocv='0'
+uci set wireless.radio1.disabled='0'
+uci commit wireless
+wifi reload
+echo -e "${GREEN}** Wifi Configured **${NC}"
+
+# Set Root Password
+(echo "123456789"; echo "123456789") | passwd root >/dev/null 2>&1 || sed -i '/^root:/s|:[^:]*|:$5$S5bxda0buJo3RfO4$soovbPY4JGEbfMmggEPdo9mW/1qkTaAgVn9bbAfJeD7|' /etc/shadow
+echo -e "${CYAN}** Root password is set: 123456789 **${NC}"
+
+# Reboot or Exit
+while true; do
+    printf "${YELLOW}Press [r] to reboot or [e] to exit: ${NC}"
+    read -rsn1 input
+    case "$input" in
+        r|R)
+            echo -e "${GREEN}\nRebooting system...${NC}"
+            reboot
+            exit 0
+            ;;
+        e|E)
+            echo -e "${RED}\nExiting script.${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}\nInvalid choice! Press 'r' or 'e'.${NC}"
+            sleep 1
+            ;;
+    esac
+done
