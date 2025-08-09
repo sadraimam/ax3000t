@@ -25,22 +25,17 @@ else
 fi
 
 # Initialize network DNS
-  # Clear existing DNS settings
-uci del network.wan.dns 2>/dev/null    # Ignore if already missing
-uci del network.wan6.dns 2>/dev/null   # Ignore if already missing
-  # Disable DHCP-provided DNS
+uci del network.wan.dns 2>/dev/null
+uci del network.wan6.dns 2>/dev/null
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
-uci set network.wan.ignore_dns="1"     # Block DHCP from overriding DNS
-  # Set new DNS (IPv4 + IPv6)
+uci set network.wan.ignore_dns="1"
 uci add_list network.wan.dns="8.8.4.4"
 uci add_list network.wan.dns="1.1.1.1"
 uci add_list network.wan6.dns="2001:4860:4860::8844"
 uci add_list network.wan6.dns="2606:4700:4700::1111"
-  # Commit changes & restart network
 uci commit network
 /sbin/reload_config >/dev/null 
-  # Verify
 echo -e "${GREEN}Current DNS:"
 echo "IPv4: $(uci get network.wan.dns)"
 echo "IPv6: $(uci get network.wan6.dns)${NC}"
@@ -52,10 +47,6 @@ uci set system.@system[0].timezone='<+0330>-3:30'
 uci commit system
 /etc/init.d/sysntpd restart
 echo -e "${GREEN}Time/Date Initialized! ${NC}"
-
-#uci commit
-
-# Force NTP sync (with retry fallback)
 echo -e "${YELLOW}Syncing time with NTP...${NC}"
 ntpd -n -q -p ir.pool.ntp.org || {
   echo -e "${RED}NTP sync failed! Retrying with global pool...${NC}"
@@ -64,7 +55,6 @@ ntpd -n -q -p ir.pool.ntp.org || {
   }
 }
 echo -e "${CYAN}$(date)${NC}"
-exit 0
 
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
