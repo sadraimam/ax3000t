@@ -24,7 +24,7 @@ else
     echo -e "${GREEN}Configuring System...${NC}"
 fi
 
-# Initialize network DNS
+# Initialize Network
 uci del network.wan.dns 2>/dev/null
 uci del network.wan6.dns 2>/dev/null
 uci set network.wan.peerdns="0"
@@ -41,7 +41,7 @@ echo "IPv4: $(uci get network.wan.dns)"
 echo "IPv6: $(uci get network.wan6.dns)${NC}"
 echo -e "${GREEN}Network Initialized! ${NC}"
 
-# Set Tehran timezone (IRST, UTC+3:30)
+# Initialize Time/Date
 uci set system.@system[0].zonename='Asia/Tehran'
 uci set system.@system[0].timezone='<+0330>-3:30'
 uci commit system
@@ -74,18 +74,15 @@ opkg update
 
 # Function to install from tmp
 install_tmp() {
-  pkg="$1"
-  
+  pkg="$1"  
   # Check if package is already installed
   if opkg list-installed | grep -q "^$pkg - "; then
     echo -e "${GREEN}$pkg is already installed. Skipping.${NC}"
     return 0
   fi
-
   echo -e "${YELLOW}Installing $pkg ...${NC}"
   cd /tmp || return 1
   rm -f ${pkg}_*.ipk  # Clean up any previous downloads
-
   # Download with retry logic
   retry=3
   while [ $retry -gt 0 ]; do
@@ -100,27 +97,22 @@ install_tmp() {
       sleep 5
     fi
   done
-
   # Final verification after download attempts
   if ! ls ${pkg}_*.ipk >/dev/null 2>&1; then
     echo -e "${RED}Failed to download $pkg after multiple attempts${NC}"
     return 1
   fi
-
   # Install package
   ipk_file=$(ls -t ${pkg}_*.ipk | head -n1)
   opkg install "$ipk_file"
   install_status=$?
-  
   # Cleanup regardless of installation status
   rm -f ${pkg}_*.ipk
-  
   if [ $install_status -ne 0 ]; then
     echo -e "${RED}Installation failed for $pkg${NC}"
   else
     echo -e "${GREEN}Successfully installed $pkg${NC}"
-  fi
-  
+  fi  
   sleep 2
   return $install_status
 }
