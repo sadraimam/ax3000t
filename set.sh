@@ -33,23 +33,22 @@ uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
 uci set network.wan.ignore_dns="1"     # Block DHCP from overriding DNS
   # Set new DNS (IPv4 + IPv6)
-uci add_list network.wan.dns="8.8.8.8"
+uci add_list network.wan.dns="8.8.4.4"
 uci add_list network.wan.dns="1.1.1.1"
 uci add_list network.wan6.dns="2001:4860:4860::8844"
 uci add_list network.wan6.dns="2606:4700:4700::1111"
   # Commit changes & restart network
 uci commit network
 /sbin/reload_config >/dev/null 
-echo -e "${GREEN}✓ DNS Successfully Updated!${NC}"
   # Verify
-echo -e "Current DNS:"
+echo -e "${GREEN}Current DNS:"
 echo "IPv4: $(uci get network.wan.dns)"
-echo "IPv6: $(uci get network.wan6.dns)"
+echo "IPv6: $(uci get network.wan6.dns)${NC}"
 echo -e "${GREEN}Network Initialized! ${NC}"
 
 # Set Tehran timezone (IRST, UTC+3:30)
 uci set system.@system[0].zonename='Asia/Tehran'
-uci set system.@system[0].timezone='IRST-3:30IRDT,IRST-3:30,M3.5.0/0,J79/0'
+uci set system.@system[0].timezone='<+0330>-3:30'
 uci commit system
 /etc/init.d/sysntpd restart
 echo -e "${GREEN}Time/Date Initialized! ${NC}"
