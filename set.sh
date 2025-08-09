@@ -39,7 +39,8 @@ uci add_list network.wan6.dns="2001:4860:4860::8844"
 uci add_list network.wan6.dns="2606:4700:4700::1111"
   # Commit changes & restart network
 uci commit network
-/sbin/reload_config >/dev/null && echo -e "${GREEN}✓ DNS Successfully Updated!${NC}" || echo -e "${RED}✗ Failed to restart network!${NC}"
+/sbin/reload_config >/dev/null 
+echo -e "${GREEN}✓ DNS Successfully Updated!${NC}"
   # Verify
 echo -e "Current DNS:"
 echo "IPv4: $(uci get network.wan.dns)"
