@@ -64,6 +64,7 @@ ntpd -n -q -p ir.pool.ntp.org || {
   }
 }
 echo -e "${CYAN}$(date)${NC}"
+exit 0
 
 # Add Passwall Feeds
 wget -O /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub
@@ -80,8 +81,6 @@ echo -e "${GREEN}Feed Updated!${NC}"
 
 echo -e "${YELLOW}Updating Packages...${NC}"
 opkg update
-
-exit 0
 
 # Function to install from tmp
 install_tmp() {
