@@ -29,7 +29,6 @@ uci del network.wan.dns 2>/dev/null
 uci del network.wan6.dns 2>/dev/null
 uci set network.wan.peerdns="0"
 uci set network.wan6.peerdns="0"
-uci set network.wan.ignore_dns="1"
 uci add_list network.wan.dns="8.8.4.4"
 uci add_list network.wan.dns="1.1.1.1"
 uci add_list network.wan6.dns="2001:4860:4860::8844"
