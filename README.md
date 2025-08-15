@@ -19,6 +19,10 @@ Passwall2 Automated configuration script for Xiaomi AX3000T running OpenWrt.
 ```bash
 rm -f set.sh && wget https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh && chmod 777 set.sh && sh set.sh
 ```
+```bash
+rm -f /tmp/set.sh && wget -O /tmp/set.sh https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh && chmod +x /tmp/set.sh && sh /tmp/set.sh
+```
+
 
 ## Default Settings
 - Default root password: 123456789 (Change after installation!)
