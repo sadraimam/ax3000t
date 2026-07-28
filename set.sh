@@ -557,6 +557,37 @@ setup_root_wifi() {
     msg warn "Root password is set: 123456789"
 }
 
+setup_reset_button() {
+    echo -e "\n[+] Configuring hardware reset button..."
+    
+    cat << 'EOF' > /etc/rc.button/reset
+#!/bin/sh
+
+# Only execute when the button is released
+[ "${ACTION}" = "released" ] || exit 0
+
+. /lib/functions.sh
+
+logger "Reset button pressed for ${SEEN} seconds"
+
+# If held for 5 seconds or longer, clear root password
+if [ "${SEEN}" -ge 5 ]; then
+    logger "Reset button action: Removing root password"
+    passwd -d root
+    sync
+elif [ "${SEEN}" -ge 1 ]; then
+    logger "Reset button action: Rebooting device"
+    sync
+    reboot
+fi
+
+return 0
+EOF
+
+    chmod +x /etc/rc.button/reset
+    echo "[✓] Reset button modified: 5s hold clears root password, 1s hold reboots."
+}
+
 show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
@@ -571,6 +602,7 @@ show_help() {
     echo "  -f, --full          Full feature install (includes chinadns-ng hysteria haproxy microsocks naiveproxy)."
     echo "  -rw, --root-wifi    Root and WiFi setup (interactive configuration)."
     echo "  -i, --iran          Apply Iran specific configurations."
+    echo "  -rb, --reset-button Modify reset button to clear root password (5s press) instead of factory reset."
     echo "  -h, --help          Show this help message."
     echo ""
     echo "Examples:"
@@ -590,6 +622,7 @@ ALLOW_UNTRUSTED_FEEDS=false
 ROOT_WIFI=false
 IRAN_CONFIG=false
 FULL_FEATURE=false
+MOD_RESET_BTN=false
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -607,6 +640,7 @@ while [ "$#" -gt 0 ]; do
         -f|--full) FULL_FEATURE=true; shift ;;
         -rw|--root-wifi) ROOT_WIFI=true; shift ;;
         -i|--iran) IRAN_CONFIG=true; shift ;;
+        -rb|--reset-button) MOD_RESET_BTN=true; shift ;;
         -*) msg err "Unknown option: $1" ;;
         *) msg err "Unknown argument: $1. Use --github flag to specify version." ;;
     esac
@@ -1007,6 +1041,10 @@ fi
 
 if [ "$ROOT_WIFI" = true ]; then
     setup_root_wifi
+fi
+
+if [ "$MOD_RESET_BTN" -eq 1 ]; then
+    setup_reset_button
 fi
 
 msg ok "Installation completed"
