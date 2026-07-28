@@ -9,6 +9,8 @@ CONFIG_DIR="/etc/config"
 BACKUP_SUFFIX=$(date +%Y%m%d)
 MIN_SPACE_KB=20480
 
+trap 'rm -rf "$TEMP_DIR" /tmp/passwall2-*.XXXXXX /tmp/passwall2-* 2>/dev/null' EXIT INT TERM
+
 FEED_BASE_URL="https://master.dl.sourceforge.net/project/openwrt-passwall-build"
 FEED_NAMES="passwall_luci passwall_packages passwall2"
 FEED_RUNTIME_PACKAGES="xray-core sing-box geoview v2ray-geoip v2ray-geosite tcping"
@@ -1065,7 +1067,7 @@ while true; do
             exit 0
             ;;
         *)
-            msg err "\nInvalid choice! Press 'r' or 'e'"
+            msg warn "\nInvalid choice! Press 'r' or 'e'"
             sleep 1
             ;;
     esac
