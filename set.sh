@@ -600,7 +600,7 @@ show_help() {
     echo "  -c, --clean         Clean install (remove old packages first)."
     echo "  -l, --only-luci     Install only LuCI interface (skip binaries). GitHub mode only."
     echo "  -f, --full          Full feature install (includes chinadns-ng hysteria haproxy microsocks naiveproxy)."
-    echo "  -rw, --root-wifi    Root and WiFi setup (interactive configuration)."
+    echo "  -rw, --root-wifi    Root and WiFi setup (sets passwords to 123456789)."
     echo "  -i, --iran          Apply Iran specific configurations."
     echo "  -rb, --reset-button Modify reset button to clear root password (5s press) instead of factory reset."
     echo "  -h, --help          Show this help message."
@@ -1043,7 +1043,7 @@ if [ "$ROOT_WIFI" = true ]; then
     setup_root_wifi
 fi
 
-if [ "$MOD_RESET_BTN" -eq 1 ]; then
+if [ "$MOD_RESET_BTN" = true ]; then
     setup_reset_button
 fi
 
@@ -1052,7 +1052,7 @@ rm -f "$0"
 
 # Reboot or Exit
 while true; do
-    printf "${YELLOW}Press [r] to reboot or [e] to exit: ${NC}"
+    printf "${C_YELLOW}Press [r] to reboot or [e] to exit: ${C_RESET}"
     read -rsn1 input
     case "$input" in
         r|R)
