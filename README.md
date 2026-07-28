@@ -25,6 +25,7 @@ The script accepts several optional arguments so you can customize the installat
 - `-f, --full` : Full feature install (includes chinadns-ng, hysteria, haproxy, microsocks, naiveproxy).
 - `-rw, --root-wifi` : Interactive setup to configure a new Root password and WiFi password.
 - `-i, --iran` : Apply Iran-specific configurations (Timezone, Passwall banner patch, custom DNS, and DNS Rebind fixes).
+- `-rb, --reset-button` : Modify hardware reset button to clear root password on a 5s press instead of factory reset.
 - `-h, --help` : Show help message.
 
 **Examples:**
@@ -42,6 +43,7 @@ sh /tmp/set.sh -g -c
 - **Dependency Management:** Automatically installs required kernels (`kmod-nft-tproxy`, etc.), swaps `dnsmasq` for `dnsmasq-full`, and ensures DNS resolves correctly during the swap.
 - **Interactive Configuration:** Set secure defaults for your WiFi and root password (`-rw`).
 - **Region Specific Fixes:** Dedicated Iran configuration flag (`-i`) to set `Asia/Tehran` timezone, add regional DNS, and fix DNS rebinding for local carrier portals (Irancell, MCI, TCI).
+- **Hardware Reset Recovery:** Modify the hardware reset button to clear the root password instead of wiping the device (`-rb`).
 
 ## Prerequisites
 - OpenWrt installed
