@@ -22,6 +22,7 @@ The script accepts several optional arguments so you can customize the installat
 - `-g, --github [VER]` : Install from GitHub releases instead of SourceForge feeds. Optionally specify a version (e.g., `v2.0.1`).
 - `-c, --clean` : Perform a clean install (removes existing Passwall packages first).
 - `-l, --only-luci` : Install only the LuCI interface (skip binaries). Used with GitHub mode only.
+- `-s, --singbox` : Minimal install with only the sing-box core (no extra cores or features).
 - `-f, --full` : Full feature install (includes chinadns-ng, hysteria, haproxy, microsocks, naiveproxy).
 - `-rw, --root-wifi` : Setup to configure the Root password and WiFi password to 123456789.
 - `-i, --iran` : Apply Iran-specific configurations (Timezone, Passwall banner patch, custom DNS, and DNS Rebind fixes).
