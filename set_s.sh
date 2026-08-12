@@ -818,8 +818,8 @@ if [ "$GITHUB_MODE" = false ]; then
 
     ensure_feed_packages_available
 
-    PASSWALL_INSTALLED_PACKAGES=$(grep -Fxf "$INSTALLED_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-    PASSWALL_UPGRADABLE_PACKAGES=$(grep -Fxf "$UPGRADABLE_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+    PASSWALL_INSTALLED_PACKAGES=$(grep -Fxf "$INSTALLED_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | grep -v "luci-i18n-passwall2-" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+    PASSWALL_UPGRADABLE_PACKAGES=$(grep -Fxf "$UPGRADABLE_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | grep -v "luci-i18n-passwall2-" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
 
     rm -f "$FEED_PACKAGES_FILE" "$INSTALLED_PACKAGES_FILE" "$UPGRADABLE_PACKAGES_FILE"
 
