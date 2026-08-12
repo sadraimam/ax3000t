@@ -495,7 +495,7 @@ initialize_network() {
 
 initialize_time_date() {
     msg info "Syncing time with NTP..."
-    ntpd -n -q -p 0.openwrt.pool.ntp.org || msg warn "NTP sync failed."
+    ntpd -n -q -p 162.159.200.1 -p 216.239.35.0 -p 0.openwrt.pool.ntp.org || msg warn "NTP sync failed."
     msg ok "Current system time: $(date)"
 }
 
