@@ -560,7 +560,7 @@ setup_root_wifi() {
 }
 
 setup_reset_button() {
-    echo -e "\n[+] Configuring hardware reset button..."
+    msg warn "Configuring hardware reset button..."
     
     cat << 'EOF' > /etc/rc.button/reset
 #!/bin/sh
@@ -587,7 +587,7 @@ return 0
 EOF
 
     chmod +x /etc/rc.button/reset
-    echo "[✓] Reset button modified: 5s hold clears root password, 1s hold reboots."
+    msg ok "Reset button modified: 5s hold clears root password, 1s hold reboots."
 }
 
 show_help() {
@@ -602,6 +602,7 @@ show_help() {
     echo "  -c, --clean         Clean install (remove old packages first)."
     echo "  -l, --only-luci     Install only LuCI interface (skip binaries). GitHub mode only."
     echo "  -f, --full          Full feature install (includes chinadns-ng hysteria haproxy microsocks naiveproxy)."
+    echo "  -s, --singbox       Minimal install with only sing-box core (no extra cores or features)."
     echo "  -rw, --root-wifi    Root and WiFi setup (sets passwords to 123456789)."
     echo "  -i, --iran          Apply Iran specific configurations."
     echo "  -rb, --reset-button Modify reset button to clear root password (5s press) instead of factory reset."
@@ -624,6 +625,7 @@ ALLOW_UNTRUSTED_FEEDS=false
 ROOT_WIFI=false
 IRAN_CONFIG=false
 FULL_FEATURE=false
+SINGBOX_ONLY=false
 MOD_RESET_BTN=false
 
 while [ "$#" -gt 0 ]; do
@@ -640,6 +642,7 @@ while [ "$#" -gt 0 ]; do
         -c|--clean) CLEAN_INSTALL=true; shift ;;
         -l|--only-luci) ONLY_LUCI=true; shift ;;
         -f|--full) FULL_FEATURE=true; shift ;;
+        -s|--singbox) SINGBOX_ONLY=true; shift ;;
         -rw|--root-wifi) ROOT_WIFI=true; shift ;;
         -i|--iran) IRAN_CONFIG=true; shift ;;
         -rb|--reset-button) MOD_RESET_BTN=true; shift ;;
@@ -648,7 +651,34 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ "$FULL_FEATURE" = true ]; then
+if [ "$FULL_FEATURE" = true ] && [ "$SINGBOX_ONLY" = true ]; then
+    echo -e "${C_RED}[ERROR]${C_RESET} Options --full and --singbox cannot be used together."
+    while true; do
+        printf "${C_YELLOW}Do you want (f)ull feature or (s)ingbox only? [f/s]: ${C_RESET}"
+        read -rsn1 input
+        echo
+        case "$input" in
+            f|F)
+                SINGBOX_ONLY=false
+                msg info "Proceeding with Full Feature installation."
+                break
+                ;;
+            s|S)
+                FULL_FEATURE=false
+                msg info "Proceeding with minimal Sing-box installation."
+                break
+                ;;
+            *)
+                msg warn "Invalid choice! Press 'f' or 's'"
+                ;;
+        esac
+    done
+fi
+
+if [ "$SINGBOX_ONLY" = true ]; then
+    GITHUB_MODE=true
+    msg info "Minimal Sing-box mode selected. Forcing GitHub installation to avoid dependency conflicts."
+elif [ "$FULL_FEATURE" = true ]; then
     FEED_RUNTIME_PACKAGES="$FEED_RUNTIME_PACKAGES_FULL"
 fi
 
@@ -788,8 +818,8 @@ if [ "$GITHUB_MODE" = false ]; then
 
     ensure_feed_packages_available
 
-    PASSWALL_INSTALLED_PACKAGES=$(grep -Fxf "$INSTALLED_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-    PASSWALL_UPGRADABLE_PACKAGES=$(grep -Fxf "$UPGRADABLE_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+    PASSWALL_INSTALLED_PACKAGES=$(grep -Fxf "$INSTALLED_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | grep -v "luci-i18n-passwall2-" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+    PASSWALL_UPGRADABLE_PACKAGES=$(grep -Fxf "$UPGRADABLE_PACKAGES_FILE" "$FEED_PACKAGES_FILE" | grep -vx "luci-app-passwall2" | grep -v "luci-i18n-passwall2-" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
 
     rm -f "$FEED_PACKAGES_FILE" "$INSTALLED_PACKAGES_FILE" "$UPGRADABLE_PACKAGES_FILE"
 
@@ -883,14 +913,38 @@ if [ "$GITHUB_MODE" = false ]; then
             cat "$REFRESH_LOG"
             print_pkg_warnings "$REFRESH_LOG"
             rm -f "$REFRESH_LOG"
+            if [ "$CLEAN_INSTALL" = true ]; then
+                msg ok "Passwall packages installed"
+            else
+                msg ok "Passwall packages refreshed"
+            fi
         else
             cat "$REFRESH_LOG"
             print_space_hint "$REFRESH_LOG"
             rm -f "$REFRESH_LOG"
-            msg err "Failed to refresh Passwall packages"
+            if [ "$CLEAN_INSTALL" = true ]; then
+                msg warn "Failed to install Passwall packages"
+            else
+                msg warn "Failed to refresh Passwall packages"
+            fi
+            while true; do
+                printf "${C_YELLOW}Do you want to continue with installation anyway? [y/n]: ${C_RESET}"
+                read -rsn1 input
+                echo
+                case "$input" in
+                    y|Y)
+                        msg info "Continuing installation..."
+                        break
+                        ;;
+                    n|N)
+                        msg err "Installation aborted."
+                        ;;
+                    *)
+                        msg warn "Invalid choice! Press 'y' or 'n'"
+                        ;;
+                esac
+            done
         fi
-
-        msg ok "Passwall packages refreshed"
     else
         if [ "$CLEAN_INSTALL" = true ]; then
             msg info "No installed Passwall packages to refresh"
@@ -997,6 +1051,19 @@ else
         for pkg_file in *."$PACKAGE_TYPE"; do
             [ -f "$pkg_file" ] || continue
             [ "$pkg_file" = "$LUCI_FILENAME" ] && continue
+
+            if [ "$SINGBOX_ONLY" = true ]; then
+                pkg_name=$(get_local_package_name "$pkg_file")
+                case "$pkg_name" in
+                    sing-box|geoview|v2ray-geoip|v2ray-geosite|tcping)
+                        # allowed
+                        ;;
+                    *)
+                        echo -e "${C_CYAN}[INFO]${C_RESET} Skipping $pkg_name (minimal sing-box mode)"
+                        continue
+                        ;;
+                esac
+            fi
 
             ERROR_LOG=$(mktemp)
             if pkg_install_local "$pkg_file" >/dev/null 2>"$ERROR_LOG"; then
