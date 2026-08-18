@@ -4,6 +4,8 @@ PACKAGE_MANAGER=""
 PACKAGE_TYPE=""
 REPO_URL="https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall2/releases"
 BASE_DOWNLOAD_URL="https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download"
+MIRROR_API_URL="https://scorpian.ir/api/repos/Openwrt-Passwall/openwrt-passwall2/releases"
+MIRROR_ASSET_BASE_URL="https://scorpian.ir/proxy/asset/Openwrt-Passwall/openwrt-passwall2"
 TEMP_DIR="/tmp/passwall2_update"
 CONFIG_DIR="/etc/config"
 BACKUP_SUFFIX=$(date +%Y%m%d)
@@ -594,30 +596,34 @@ show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Description:"
-    echo "  Install Passwall2 from SourceForge feed (default) or GitHub releases."
+    echo "  Install Passwall2 from SourceForge feed (default), GitHub releases, or Iranian mirror."
     echo "  Automatically uses apk or opkg, depending on availability."
     echo ""
     echo "Options:"
-    echo "  -g, --github [VER]  Install from GitHub releases. Optional version (e.g., v2.0.1)."
-    echo "  -c, --clean         Clean install (remove old packages first)."
-    echo "  -l, --only-luci     Install only LuCI interface (skip binaries). GitHub mode only."
-    echo "  -f, --full          Full feature install (includes chinadns-ng hysteria haproxy microsocks naiveproxy)."
-    echo "  -s, --singbox       Minimal install with only sing-box core (no extra cores or features)."
-    echo "  -rw, --root-wifi    Root and WiFi setup (sets passwords to 123456789)."
-    echo "  -i, --iran          Apply Iran specific configurations."
-    echo "  -rb, --reset-button Modify reset button to clear root password (5s press) instead of factory reset."
-    echo "  -h, --help          Show this help message."
+    echo "  -g, --github [VER]         Install from GitHub releases. Optional version (e.g., v2.0.1)."
+    echo "  -gm, --github-mirror [VER] Install from Iranian GitHub mirror (scorpian.ir). Optional version."
+    echo "  -c, --clean                Clean install (remove old packages first)."
+    echo "  -l, --only-luci            Install only LuCI interface (skip binaries)."
+    echo "  -f, --full                 Full feature install (includes chinadns-ng hysteria haproxy microsocks naiveproxy)."
+    echo "  -s, --singbox              Minimal install with only sing-box core (no extra cores or features)."
+    echo "  -rw, --root-wifi           Root and WiFi setup (sets passwords to 123456789)."
+    echo "  -i, --iran                 Apply Iran specific configurations."
+    echo "  -rb, --reset-button        Modify reset button to clear root password (5s press) instead of factory reset."
+    echo "  -h, --help                 Show this help message."
     echo ""
     echo "Examples:"
-    echo "  $0                  Install latest from SourceForge feed (default)"
-    echo "  $0 -g               Install latest from GitHub"
-    echo "  $0 -g v2.0.1        Install specific version from GitHub"
-    echo "  $0 -g -c            Clean install from GitHub (latest)"
+    echo "  $0                         Install latest from SourceForge feed (default)"
+    echo "  $0 -g                      Install latest from GitHub"
+    echo "  $0 -gm                     Install latest from Iranian GitHub mirror (scorpian.ir)"
+    echo "  $0 -g v2.0.1               Install specific version from GitHub"
+    echo "  $0 -g -c                   Clean install from GitHub (latest)"
+    echo "  $0 -gm -c                  Clean install from Iranian GitHub mirror (latest)"
     echo ""
     exit 0
 }
 
 GITHUB_MODE=false
+MIRROR_MODE=false
 TARGET_VERSION=""
 CLEAN_INSTALL=false
 ONLY_LUCI=false
@@ -639,6 +645,14 @@ while [ "$#" -gt 0 ]; do
                 *) TARGET_VERSION="$1"; shift ;;
             esac
             ;;
+        -gm|--github-mirror|-m|--mirror)
+            MIRROR_MODE=true
+            shift
+            case "$1" in
+                ""|-*) ;;
+                *) TARGET_VERSION="$1"; shift ;;
+            esac
+            ;;
         -c|--clean) CLEAN_INSTALL=true; shift ;;
         -l|--only-luci) ONLY_LUCI=true; shift ;;
         -f|--full) FULL_FEATURE=true; shift ;;
@@ -647,7 +661,7 @@ while [ "$#" -gt 0 ]; do
         -i|--iran) IRAN_CONFIG=true; shift ;;
         -rb|--reset-button) MOD_RESET_BTN=true; shift ;;
         -*) msg err "Unknown option: $1" ;;
-        *) msg err "Unknown argument: $1. Use --github flag to specify version." ;;
+        *) msg err "Unknown argument: $1. Use --github or --github-mirror flag to specify version." ;;
     esac
 done
 
@@ -676,8 +690,12 @@ if [ "$FULL_FEATURE" = true ] && [ "$SINGBOX_ONLY" = true ]; then
 fi
 
 if [ "$SINGBOX_ONLY" = true ]; then
-    GITHUB_MODE=true
-    msg info "Minimal Sing-box mode selected. Forcing GitHub installation to avoid dependency conflicts."
+    if [ "$MIRROR_MODE" = false ]; then
+        GITHUB_MODE=true
+        msg info "Minimal Sing-box mode selected. Forcing GitHub installation to avoid dependency conflicts."
+    else
+        msg info "Minimal Sing-box mode selected with Iranian GitHub mirror."
+    fi
 elif [ "$FULL_FEATURE" = true ]; then
     FEED_RUNTIME_PACKAGES="$FEED_RUNTIME_PACKAGES_FULL"
 fi
@@ -758,7 +776,7 @@ for config_file in "$CONFIG_DIR"/passwall2*; do
     msg ok "Backed up config: $BACKUP_FILE"
 done
 
-if [ "$GITHUB_MODE" = false ]; then
+install_from_feed() {
     msg head "Feed installation"
 
     if [ -z "$RELEASE_VER" ]; then
@@ -952,7 +970,185 @@ if [ "$GITHUB_MODE" = false ]; then
             msg info "No Passwall package updates available"
         fi
     fi
-else
+}
+
+install_from_mirror() {
+    msg head "Iranian GitHub Mirror installation"
+    msg info "Fetching release metadata from scorpian.ir"
+
+    API_RESPONSE=$(curl -s --fail "$MIRROR_API_URL")
+    if [ $? -ne 0 ]; then
+        msg err "Failed to fetch release metadata from scorpian.ir mirror"
+    fi
+
+    if [ -z "$TARGET_VERSION" ]; then
+        RELEASE_TAG=$(echo "$API_RESPONSE" | jsonfilter -e '@.releases[0].tag_name')
+        RELEASE_INDEX=0
+    else
+        RELEASE_TAG="$TARGET_VERSION"
+        RELEASE_INDEX=$(echo "$API_RESPONSE" | jsonfilter -e '@.releases[*].tag_name' | grep -n "^${TARGET_VERSION}$" | cut -d: -f1)
+        if [ -n "$RELEASE_INDEX" ]; then
+            RELEASE_INDEX=$((RELEASE_INDEX - 1))
+        else
+            msg err "Version $TARGET_VERSION not found in mirror releases."
+        fi
+    fi
+
+    if [ -z "$RELEASE_TAG" ]; then
+        msg err "Failed to parse release tag from mirror."
+    fi
+
+    msg ok "Release: ${C_BOLD}$RELEASE_TAG${C_RESET}"
+
+    case "$PACKAGE_TYPE" in
+        apk) LUCI_FILENAME=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*].name" | grep "^luci-app-passwall2-" | grep -E "\.${PACKAGE_TYPE}$" | head -n 1) ;;
+        ipk) LUCI_FILENAME=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*].name" | grep "^luci-app-passwall2_" | grep -E "\.${PACKAGE_TYPE}$" | head -n 1) ;;
+    esac
+
+    LUCI_ASSET_ID=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[@.name='$LUCI_FILENAME'].id" 2>/dev/null)
+    if [ -z "$LUCI_ASSET_ID" ]; then
+        LUCI_ASSET_ID=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*]" 2>/dev/null | awk -v target="$LUCI_FILENAME" '
+            /"name":/ || /"name" :/ { name=$0; sub(/.*"name"[[:space:]]*:[[:space:]]*"/, "", name); sub(/".*/, "", name) }
+            /"id":/ || /"id" :/ { id=$0; sub(/.*"id"[[:space:]]*:[[:space:]]*/, "", id); sub(/,.*/, "", id); sub(/[[:space:]].*/, "", id); if (name == target) { print id; exit } }
+        ')
+    fi
+
+    ZIP_FILENAME=""
+    ZIP_ASSET_ID=""
+
+    if [ "$ONLY_LUCI" = false ]; then
+        msg info "Resolving package set"
+        SUPPORTED_ARCHS=$(pkg_print_architectures)
+
+        for arch in $SUPPORTED_ARCHS; do
+            CANDIDATE_NAME="passwall_packages_${PACKAGE_TYPE}_${arch}.zip"
+
+            if echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*].name" | grep -q "^${CANDIDATE_NAME}$"; then
+                ZIP_FILENAME="$CANDIDATE_NAME"
+                ZIP_ASSET_ID=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[@.name='$ZIP_FILENAME'].id" 2>/dev/null)
+                if [ -z "$ZIP_ASSET_ID" ]; then
+                    ZIP_ASSET_ID=$(echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*]" 2>/dev/null | awk -v target="$ZIP_FILENAME" '
+                        /"name":/ || /"name" :/ { name=$0; sub(/.*"name"[[:space:]]*:[[:space:]]*"/, "", name); sub(/".*/, "", name) }
+                        /"id":/ || /"id" :/ { id=$0; sub(/.*"id"[[:space:]]*:[[:space:]]*/, "", id); sub(/,.*/, "", id); sub(/[[:space:]].*/, "", id); if (name == target) { print id; exit } }
+                    ')
+                fi
+                msg ok "Binary package: ${C_BOLD}$ZIP_FILENAME${C_RESET}"
+                break
+            fi
+        done
+
+        if [ -z "$ZIP_FILENAME" ]; then
+            msg warn "No binary package matched detected architectures"
+            echo "$SUPPORTED_ARCHS"
+            msg warn "Available release assets:"
+            echo "$API_RESPONSE" | jsonfilter -e "@.releases[${RELEASE_INDEX}].assets[*].name" | grep ".zip"
+            msg err "No compatible binary package found. Use --only-luci for a LuCI-only install"
+        fi
+    else
+        msg info "Skipping binary package lookup"
+    fi
+
+    msg head "Download"
+
+    if [ -n "$LUCI_FILENAME" ] && [ -n "$LUCI_ASSET_ID" ]; then
+        msg info "Downloading LuCI package from mirror"
+        curl -L -s --fail -o "$LUCI_FILENAME" "$MIRROR_ASSET_BASE_URL/$LUCI_ASSET_ID"
+        [ -s "$LUCI_FILENAME" ] || msg err "Failed to download LuCI package from mirror."
+    else
+        msg err "LuCI package not found in release assets."
+    fi
+
+    if [ "$ONLY_LUCI" = false ] && [ -n "$ZIP_FILENAME" ] && [ -n "$ZIP_ASSET_ID" ]; then
+        msg info "Downloading binary archive from mirror"
+        curl -L -s --fail -o "$ZIP_FILENAME" "$MIRROR_ASSET_BASE_URL/$ZIP_ASSET_ID"
+
+        if [ -s "$ZIP_FILENAME" ]; then
+            msg ok "Binary archive downloaded"
+            unzip -q -j "$ZIP_FILENAME" && rm "$ZIP_FILENAME"
+            msg ok "Binary archive unpacked"
+        else
+            msg err "Failed to download binary ZIP from mirror. File is empty."
+        fi
+    fi
+
+    if [ "$CLEAN_INSTALL" = true ]; then
+        msg head "Cleanup"
+        msg info "Removing existing installation"
+        pkg_remove_force luci-app-passwall2 >/dev/null 2>&1
+
+        if [ "$ONLY_LUCI" = false ]; then
+            for pkg_file in *."$PACKAGE_TYPE"; do
+                [ -f "$pkg_file" ] || continue
+                [ "$pkg_file" = "$LUCI_FILENAME" ] && continue
+                pkg_name=$(get_local_package_name "$pkg_file")
+                if [ "$pkg_name" != "libc" ] && [ "$pkg_name" != "kernel" ]; then
+                    [ "$pkg_name" = "simple-obfs-client" ] && pkg_remove_force simple-obfs >/dev/null 2>&1
+                    pkg_remove_force "$pkg_name" >/dev/null 2>&1
+                fi
+            done
+        fi
+        msg ok "Existing packages removed"
+    fi
+
+    msg head "Install"
+
+    if [ "$ONLY_LUCI" = false ]; then
+        msg info "Installing packages"
+        for pkg_file in *."$PACKAGE_TYPE"; do
+            [ -f "$pkg_file" ] || continue
+            [ "$pkg_file" = "$LUCI_FILENAME" ] && continue
+
+            if [ "$SINGBOX_ONLY" = true ]; then
+                pkg_name=$(get_local_package_name "$pkg_file")
+                case "$pkg_name" in
+                    sing-box|geoview|v2ray-geoip|v2ray-geosite|tcping)
+                        # allowed
+                        ;;
+                    *)
+                        echo -e "${C_CYAN}[INFO]${C_RESET} Skipping $pkg_name (minimal sing-box mode)"
+                        continue
+                        ;;
+                esac
+            fi
+
+            ERROR_LOG=$(mktemp)
+            if pkg_install_local "$pkg_file" >/dev/null 2>"$ERROR_LOG"; then
+                echo -e "${C_GREEN}[OK]${C_RESET} ${pkg_file}"
+                rm "$pkg_file"
+            else
+                echo -e "${C_RED}[ERROR]${C_RESET} ${pkg_file}"
+                if [ -s "$ERROR_LOG" ]; then
+                    echo -e "${C_YELLOW}[WARN]${C_RESET} Error details:"
+                    cat "$ERROR_LOG" | sed 's/^/    /'
+                    if grep -qiE "(space|No space left|disk full|available on filesystem|needs|verify_pkg_installable)" "$ERROR_LOG"; then
+                        echo -e "${C_YELLOW}[WARN]${C_RESET} Suggestion: try --clean to free space"
+                    fi
+                fi
+            fi
+            rm -f "$ERROR_LOG"
+        done
+    fi
+
+    msg info "Installing LuCI package"
+    ERROR_LOG=$(mktemp)
+    if pkg_install_local "$LUCI_FILENAME" >/dev/null 2>"$ERROR_LOG"; then
+        rm "$LUCI_FILENAME"
+        rm -f "$ERROR_LOG"
+        msg ok "LuCI installed"
+    else
+        if [ -s "$ERROR_LOG" ]; then
+            echo -e "${C_YELLOW}[WARN]${C_RESET} Error details:"
+            cat "$ERROR_LOG" | sed 's/^/  /'
+            if grep -qiE "(space|No space left|disk full|available on filesystem|needs|verify_pkg_installable)" "$ERROR_LOG"; then
+                echo -e "${C_YELLOW}[WARN]${C_RESET} Suggestion: try --clean to free space"
+            fi
+        fi
+        rm -f "$ERROR_LOG"
+        msg err "Failed to install LuCI package"
+    fi
+}
+
+install_from_github() {
     msg head "GitHub installation"
     msg info "Fetching release metadata"
 
@@ -1100,6 +1296,15 @@ else
         rm -f "$ERROR_LOG"
         msg err "Failed to install LuCI package"
     fi
+}
+
+
+if [ "$GITHUB_MODE" = false ] && [ "$MIRROR_MODE" = false ]; then
+    install_from_feed
+elif [ "$MIRROR_MODE" = true ]; then
+    install_from_mirror
+else
+    install_from_github
 fi
 
 cd /tmp && rm -rf "$TEMP_DIR"

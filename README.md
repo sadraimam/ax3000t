@@ -1,60 +1,112 @@
-# OpenWrt Passwall2 Auto Configuration with optional Iran specific fixes
+# 🚀 OpenWrt Passwall2 Auto-Configuration Suite
 
-Automated configuration script for setting up Passwall2 on OpenWrt devices. 
-It supports both newer v25 releases (`apk`) and older releases (`opkg`), resolving dependencies and configuring everything.
+Automated, resilient, and feature-rich setup script for installing and configuring **Passwall2** on OpenWrt routers.
 
-Minimum hardware profile:
-- Flash `128MB`
-- RAM `256MB`
+Designed to handle package management variations across OpenWrt versions, automatically resolve kernel and DNS dependencies, provide multi-source release downloads (including an Iranian local mirror), and apply optional region-specific network & system optimizations.
 
-## Installation
+---
 
-Run via SSH:
+## ✨ Key Features
+
+| Feature | Description |
+| :--- | :--- |
+| ⚡ **Package Manager Agnostic** | Seamlessly supports both modern OpenWrt releases (`apk` in OpenWrt 24.10 / 25+) and legacy releases (`opkg`), handling `.apk` and `.ipk` packages transparently. |
+| 🌐 **Triple-Source Engine** | Install from official SourceForge package feeds (default), direct **GitHub Releases** (`-g`), or the **Iranian Local GitHub Mirror** (`-gm`) via `scorpian.ir`. |
+| 📦 **Customizable Profiles** | Choose from **Standard**, **Full Feature** (`-f`), **Minimal Sing-Box** (`-s`), or **LuCI UI Only** (`-l`) installation modes to fit your hardware profile. |
+| 🛠️ **Zero-Downtime Swap** | Safely upgrades `dnsmasq` to `dnsmasq-full` and installs kernel modules (`kmod-nft-tproxy`, `kmod-nft-socket`) while maintaining active internet connectivity via fallback resolvers. |
+| 🇮🇷 **Iran Regional Fixes** | Dedicated flag (`-i`) sets `Asia/Tehran` timezone, configures local DNS (`5.200.200.200`), fixes DNS rebinding for carrier portals (*Irancell, MCI, TCI*), and patches the Passwall status banner. |
+| 🔑 **Emergency Password Reset** | Re-maps the physical hardware reset button (`-rb`) so a 5-second press clears the root SSH password without wiping your router's configuration. |
+| 📶 **Default Passwords Setup** | Quickly provision uniform Wi-Fi (2.4GHz & 5GHz) and root SSH passwords to `123456789` (`-rw`). |
+
+---
+
+## ⚡ Quick Start
+
+Run the automated installer via SSH on your OpenWrt router:
 
 ```bash
 rm -f /tmp/set.sh && wget -O /tmp/set.sh https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh && chmod +x /tmp/set.sh && sh /tmp/set.sh
 ```
 
-### Script Options (Flags)
+---
 
-The script accepts several optional arguments so you can customize the installation:
+## 🎛️ Command-Line Reference & Flags
 
-- `-g, --github [VER]` : Install from GitHub releases instead of SourceForge feeds. Optionally specify a version (e.g., `v2.0.1`).
-- `-c, --clean` : Perform a clean install (removes existing Passwall packages first).
-- `-l, --only-luci` : Install only the LuCI interface (skip binaries). Used with GitHub mode only.
-- `-s, --singbox` : Minimal install with only the sing-box core (no extra cores or features).
-- `-f, --full` : Full feature install (includes chinadns-ng, hysteria, haproxy, microsocks, naiveproxy).
-- `-rw, --root-wifi` : Setup to configure the Root password and WiFi password to 123456789.
-- `-i, --iran` : Apply Iran-specific configurations (Timezone, Passwall banner patch, custom DNS, and DNS Rebind fixes).
-- `-rb, --reset-button` : Modify hardware reset button to clear root password on a 5s press instead of factory reset.
-- `-h, --help` : Show help message.
+Customize your installation by appending flags to the script invocation:
 
-**Examples:**
+| Flag | Long Option | Description |
+| :--- | :--- | :--- |
+| `-g [VER]` | `--github [VER]` | Install directly from GitHub releases instead of SourceForge feeds. Optionally specify a target release tag (e.g., `v2.0.1` or `26.8.17-1`). |
+| `-gm [VER]` | `--github-mirror [VER]` | Install from the **Iranian GitHub Mirror** (`scorpian.ir`). Bypasses GitHub rate-limiting, DNS pollution, and ISP throttling in Iran. Alias: `-m`. |
+| `-c` | `--clean` | Perform a clean installation. Removes existing Passwall2 packages and runtime binaries before installing to prevent conflicts. |
+| `-s` | `--singbox` | Minimal install with **sing-box** core only (skips extra proxy binaries to conserve storage space). Automatically uses GitHub/Mirror release download mode. |
+| `-f` | `--full` | Full feature installation. Includes all proxy cores and tools: `chinadns-ng`, `hysteria`, `haproxy`, `microsocks`, `naiveproxy`, `xray-core`, `sing-box`, `geoview`, `v2ray-geoip`, `v2ray-geosite`, `tcping`. |
+| `-l` | `--only-luci` | Install only the LuCI web interface (`luci-app-passwall2`). Skips downloading binary packages (useful if custom cores are pre-built into firmware). |
+| `-i` | `--iran` | Apply Iran region fixes: sets `Asia/Tehran` timezone, adds `5.200.200.200` WAN DNS, fixes carrier DNS rebinding (`my.irancell.ir`, `my.mci.ir`, `login.tci.ir`), and patches Passwall status banner. |
+| `-rw` | `--root-wifi` | Set root SSH password and 2.4GHz/5GHz Wi-Fi passwords to `123456789`. |
+| `-rb` | `--reset-button` | Reconfigures hardware reset button: 1-second press reboots router; 5-second press clears root password (`passwd -d root`). |
+| `-h` | `--help` | Display script usage help and exit. |
+
+---
+
+## 💡 Recommended Installation Recipes
+
+### 1. Recommended Setup for Iran (High Speed & Reliability)
+Uses the Iranian GitHub Mirror, clean package installation, root/Wi-Fi password provisioning, and regional fixes:
 ```bash
-# Install latest from SourceForge feed with root/wifi setup and Iran configs
-sh /tmp/set.sh -rw -i
+sh /tmp/set.sh -gm -c -rw -i
+```
 
-# Clean install latest from GitHub releases
+### 2. Clean Install from Official GitHub Releases
+Fetches the latest release binaries directly from GitHub and performs a clean reinstall:
+```bash
 sh /tmp/set.sh -g -c
 ```
 
-## Features
-- **Package Manager Agnostic:** Automatically uses `apk` or `opkg` depending on your OpenWrt version.
-- **Dual Source Installation:** Install from either the official SourceForge feeds or directly from GitHub releases.
-- **Dependency Management:** Automatically installs required kernels (`kmod-nft-tproxy`, etc.), swaps `dnsmasq` for `dnsmasq-full`, and ensures DNS resolves correctly during the swap.
-- **Default Passwords:** Set uniform defaults for your WiFi and root password to 123456789 (`-rw`).
-- **Region Specific Fixes:** Dedicated Iran configuration flag (`-i`) to set `Asia/Tehran` timezone, add regional DNS, and fix DNS rebinding for local carrier portals (Irancell, MCI, TCI).
-- **Hardware Reset Recovery:** Modify the hardware reset button to clear the root password instead of wiping the device (`-rb`).
+### 3. Pinning a Specific Release Version
+Install a specific release version (e.g., `26.8.17-1`) via the Iranian Mirror:
+```bash
+sh /tmp/set.sh -gm 26.8.17-1 -c
+```
 
-## Prerequisites
-- OpenWrt installed
-- Root access to the router
-- Working internet connection
+### 4. Minimal Sing-Box Install (For Storage-Constrained Routers)
+Installs only the `sing-box` core and required geo-databases, leaving maximum free storage on your overlay partition:
+```bash
+sh /tmp/set.sh -s -c
+```
 
-## Default Settings
-- Default root & wifi password: `123456789` (You will be prompted to change this if using `-rw`)
-- Timezone: `UTC` (Changes to `Asia/Tehran` if using `-i`)
-- DNS: Google DNS (`8.8.8.8`, `8.8.4.4`, `1.1.1.1`, `1.0.0.1`, etc.)
+### 5. Full Feature Stack Installation
+Installs every supported proxy protocol core (Hysteria, NaiveProxy, HAProxy, ChinaDNS-NG, etc.):
+```bash
+sh /tmp/set.sh -f -c
+```
 
-## AX3000T note:
-On the Xiaomi AX3000T, factory partitioning results in an overlay size of approximately 60 MB, compared to around 90-100 MB available on similar routers. The script is optimized to work with this limited storage space although its recommended to flash the router with a UBoot layout (e.g., OpenWrt V25 AX3000T UBoot layout) to gain more free storage space (You should get 85 MB total).
+---
+
+## 📋 System Requirements
+
+- **Supported OS:** OpenWrt (Official release builds; Snapshot builds are unsupported).
+- **Architecture:** `x86_64`, `aarch64_cortex-a53`, `aarch64_cortex-a72`, `aarch64_generic`, `arm_cortex-a7`, `arm_cortex-a15`, `mipsel_24kc`, `mips_24kc`, etc.
+- **Minimum Hardware Profile:**
+  - **Flash:** 128 MB (60 MB+ available overlay storage)
+  - **RAM:** 256 MB
+
+> [!NOTE]
+> **Xiaomi AX3000T & Storage-Constrained Devices:**
+> Stock partitioning on the Xiaomi AX3000T results in an overlay size of ~60 MB. This script is optimized to run efficiently within this space. For best results, consider using minimal sing-box mode (`-s`) or flashing a custom UBoot layout to gain ~85 MB of overlay storage.
+
+---
+
+## 🛠️ Recovery & Safety Features
+
+- **Configuration Backup:** Existing Passwall configurations in `/etc/config/passwall2*` are automatically backed up with a timestamped `.bak` suffix prior to changes.
+- **Emergency Hardware Reset (`-rb`):** If locked out of SSH, holding your router's physical reset button for 5 seconds clears the root password without wiping network configs or installed packages.
+- **Space Check & Cleanup Advice:** The script verifies `/tmp` space before downloading packages and offers disk cleanup hints if storage limits are reached.
+
+---
+
+## 📄 License & Attribution
+
+- **Script Maintainer:** [sadraimam](https://github.com/sadraimam)
+- **Passwall2 Upstream Project:** [Openwrt-Passwall/openwrt-passwall2](https://github.com/Openwrt-Passwall/openwrt-passwall2)
+- **Iranian Mirror Provider:** [scorpian.ir](https://scorpian.ir/repos/Openwrt-Passwall/openwrt-passwall2)
