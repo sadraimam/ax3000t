@@ -1,5 +1,7 @@
 # 🚀 OpenWrt Passwall2 Auto-Configuration Suite
 
+🌐 **Languages:** [English](README.md) | [فارسی](README_fa.md)
+
 Automated, resilient, and feature-rich setup script for installing and configuring **Passwall2** on OpenWrt routers.
 
 Designed to handle package management variations across OpenWrt versions, automatically resolve kernel and DNS dependencies, provide multi-source release downloads (including an Iranian local mirror), and apply optional region-specific network & system optimizations.
