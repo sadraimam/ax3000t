@@ -1,10 +1,12 @@
-# 🚀 مجموعه اسکریپت پیکربندی خودکار Passwall2 در OpenWrt
+<div dir="rtl">
+
+# 🚀 OpenWrt Passwall2 Auto-Configuration Suite
 
 🌐 **زبان‌ها:** [English](README.md) | [فارسی](README_fa.md)
 
 اسکریپت خودکار، مقاوم و پرامکانات برای نصب و پیکربندی **Passwall2** روی روترهای OpenWrt.
 
-طراحی‌شده برای مدیریت تغییرات ابزارهای پکیج‌منجر در نسخه‌های مختلف OpenWrt، رفع خودکار وابستگی‌های کرنی و DNS، دانلود از منابع متناوب (از جمله میرور اختصاصی گیت‌هاب در ایران) و اعمال بهینه‌سازی‌های شبکه‌ای و سیستمی منطقه‌ای.
+این اسکریپت برای مدیریت تفاوت‌های package manager در نسخه‌های مختلف OpenWrt، حل خودکار وابستگی‌های kernel و DNS، دانلود از چند سورس مختلف (شامل میرور اختصاصی ایران) و اعمال بهینه‌سازی‌های شبکه و سیستم طراحی شده است.
 
 ---
 
@@ -12,17 +14,17 @@
 
 | ویژگی | توضیح |
 | :--- | :--- |
-| ⚡ **مستقل از مدیر پکیج (Package Manager Agnostic)** | پشتیبانی کامل و یکپارچه از نسخه‌های جدید OpenWrt (استفاده از `apk` در OpenWrt 24.10 / 25 به بالا) و نسخه‌های قدیمی‌تر (`opkg`) با پردازش شفاف پکیج‌های `.apk` و `.ipk`. |
-| 🌐 **موتور دانلود از ۳ منبع (Triple-Source Engine)** | قابلیت نصب از مخازن رسمی SourceForge (پیش‌فرض)، دانلود مستقیم از **GitHub Releases** (`-g`)، یا استفاده از **میرور ایرانی گیت‌هاب** (`-gm`) از طریق `scorpian.ir`. |
-| 📦 **پروفایل‌های نصب قابل سفارشی‌سازی** | امکان انتخاب از بین حالت‌های **استاندارد**، **کامل (`-f`)**، **کم‌حجم Sing-Box (`-s`)**، یا **فقط رابط کاربری LuCI (`-l`)** متناسب با میزان حافظه روتر. |
-| 🛠️ **جایگزینی بدون قطعی (Zero-Downtime Swap)** | ارتقای امن `dnsmasq` به `dnsmasq-full` و نصب ماژول‌های کرنی (`kmod-nft-tproxy` و `kmod-nft-socket`) همراه با حفظ اتصال اینترنت از طریق دی‌ان‌اس‌های پشتیبان. |
-| 🇮🇷 **بهینه‌سازی‌های ویژه ایران** | سوییچ اختصاصی (`-i`) جهت تنظیم منطقه زمانی به `Asia/Tehran`، تنظیم DNSهای داخلی (`5.200.200.200`)، حل مشکل DNS Rebinding پورتال اپراتورها (*ایرانسل، همراه اول، مخابرات*) و اصلاح بنر وضعیت Passwall. |
-| 🔑 **بازنشانی اضطراری کلمه عبور** | تغییر عملکرد دکمه ریست سخت‌افزاری (`-rb`) به طوری که با فشردن ۵ ثانیه‌ای، پسورد root SSH پاک می‌شود بدون اینکه تنظیمات روتر حذف گردند. |
-| 📶 **تنظیم سریع کلمات عبور پیش‌فرض** | تنظیم سریع کلمه عبور وای‌فای (باند 2.4GHz و 5GHz) و دسترسی SSH کاربر root به `123456789` (`-rw`). |
+| ⚡ **Package Manager Agnostic** | پشتیبانی کامل از نسخه‌های جدید OpenWrt (`apk` در OpenWrt 24.10 / 25+) و نسخه‌های قدیمی‌تر (`opkg`) و نصب شفاف پکیج‌های `.apk` و `.ipk`. |
+| 🌐 **Triple-Source Engine** | امکان نصب از مخازن رسمی SourceForge (پیش‌فرض)، دانلود مستقیم از **GitHub Releases** (`-g`)، یا **میرور ایرانی GitHub** (`-gm`) از طریق `scorpian.ir`. |
+| 📦 **Customizable Profiles** | امکان انتخاب پروفایل‌های نصب **Standard**، **Full Feature** (`-f`)، **Minimal Sing-Box** (`-s`)، یا **LuCI UI Only** (`-l`) متناسب با حجم حافظه روتر. |
+| 🛠️ **Zero-Downtime Swap** | ارتقای امن `dnsmasq` به `dnsmasq-full` و نصب kernel moduleهای لازم (`kmod-nft-tproxy`, `kmod-nft-socket`) بدون قطعی اینترنت با استفاده از fallback resolverها. |
+| 🇮🇷 **Iran Regional Fixes** | سوییچ اختصاصی (`-i`) جهت تنظیم timezone به `Asia/Tehran`، تنظیم WAN DNS به `5.200.200.200`، حل مشکل DNS Rebinding پورتال اپراتورها (*Irancell, MCI, TCI*) و پچ کردن بنر استاتوس Passwall. |
+| 🔑 **Emergency Password Reset** | بازپیکربندی دکمه ریست سخت‌افزاری (`-rb`) جهت پاک کردن پسورد root SSH با نگه داشتن ۵ ثانیه‌ای دکمه بدون پاک شدن تنظیمات روتر. |
+| 📶 **Default Passwords Setup** | تنظیم سریع پسورد Wi-Fi (باند 2.4GHz و 5GHz) و پسورد root SSH به `123456789` (`-rw`). |
 
 ---
 
-## ⚡ شروع سریع
+## ⚡ Quick Start
 
 اسکریپت نصب خودکار را از طریق SSH روی روتر OpenWrt خود اجرا کنید:
 
@@ -32,83 +34,85 @@ rm -f /tmp/set.sh && wget -O /tmp/set.sh https://raw.githubusercontent.com/sadra
 
 ---
 
-## 🎛️ راهنمای دستورات و سوییچ‌ها (Flags)
+## 🎛️ Command-Line Reference & Flags
 
-نصب خود را با افزودن سوییچ‌های زیر به دستور اجرای اسکریپت سفارشی‌سازی کنید:
+با اضافه کردن سوییچ‌های زیر به دستور اجرای اسکریپت، نصب خود را سفارشی‌سازی کنید:
 
-| سوییچ | پارامتر بلند | توضیح |
+| Flag | Long Option | توضیح |
 | :--- | :--- | :--- |
-| `-g [VER]` | `--github [VER]` | نصب مستقیم از GitHub Releases به جای مخازن SourceForge. امکان تعیین تگ نسخه مورد نظر (مانند `v2.0.1` یا `26.8.17-1`). |
-| `-gm [VER]` | `--github-mirror [VER]` | نصب از **میرور ایرانی گیت‌هاب** (`scorpian.ir`). دور زدن محدودیت‌های GitHub، آلودگی DNS و اختلالات اینترنت در ایران. نام مستعار: `-m`. |
-| `-c` | `--clean` | اجرای نصب تمیز (Clean Install). حذف پکیج‌های قبلی Passwall2 و فایل‌های اجرایی پیش از نصب جدید جهت جلوگیری از تداخل. |
-| `-s` | `--singbox` | نصب کم‌حجم فقط با هسته **sing-box** (صرفه‌جویی در فضای ذخیره‌سازی). به‌طور خودکار حالت دانلود از گیت‌هاب/میرور را فعال می‌کند. |
-| `-f` | `--full` | نصب کامل تمام امکانات. شامل تمامی هسته‌ها و ابزارهای پروکسی: `chinadns-ng`, `hysteria`, `haproxy`, `microsocks`, `naiveproxy`, `xray-core`, `sing-box`, `geoview`, `v2ray-geoip`, `v2ray-geosite`, `tcping`. |
-| `-l` | `--only-luci` | نصب تنها رابط وب LuCI (`luci-app-passwall2`). بدون دانلود هسته‌ها (مفید در صورت وجود هسته‌های سفارشی در فیرمور). |
-| `-i` | `--iran` | اعمال بهینه‌سازی‌های ایران: تنظیم منطقه زمانی به `Asia/Tehran`، افزودن DNS پورت `5.200.200.200` به WAN، حل مشکل ریبایند DNS اپراتورها (`my.irancell.ir`, `my.mci.ir`, `login.tci.ir`) و اصلاح بنر وضعیت Passwall. |
-| `-rw` | `--root-wifi` | تنظیم کلمه عبور کاربر root SSH و وای‌فای 2.4GHz/5GHz به `123456789`. |
-| `-rb` | `--reset-button` | بازپیکربندی دکمه ریست سخت‌افزاری: فشردن ۱ ثانیه‌ای برای ریبوت روتر؛ فشردن ۵ ثانیه‌ای برای حذف پسورد root (`passwd -d root`). |
-| `-h` | `--help` | نمایش راهنمای دستورات اسکریپت و خروج. |
+| `-g [VER]` | `--github [VER]` | نصب مستقیم از GitHub Releases به جای سورس‌های SourceForge. قابلیت تعیین release tag مشخص (مانند `v2.0.1` یا `26.8.17-1`). |
+| `-gm [VER]` | `--github-mirror [VER]` | نصب از **میرور ایرانی GitHub** (`scorpian.ir`). دور زدن GitHub rate-limiting، DNS pollution و اختلالات ISP در ایران. نام مستعار: `-m`. |
+| `-c` | `--clean` | اجرای Clean Installation. پاکسازی پکیج‌های قبلی Passwall2 و binaryهای اجرا شده قبل از نصب جهت جلوگیری از تداخل. |
+| `-s` | `--singbox` | نصب Minimal فقط با هسته **sing-box** (صرفه‌جویی در فضا). به طور خودکار حالت دانلود از GitHub/Mirror را فعال می‌کند. |
+| `-f` | `--full` | نصب Full Feature. شامل تمام proxy coreها و ابزارها: `chinadns-ng`, `hysteria`, `haproxy`, `microsocks`, `naiveproxy`, `xray-core`, `sing-box`, `geoview`, `v2ray-geoip`, `v2ray-geosite`, `tcping`. |
+| `-l` | `--only-luci` | نصب فقط LuCI web interface (`luci-app-passwall2`). بدون دانلود پکیج‌های binary (مفید در صورتی که coreهای سفارشی در فیرمور بیلد شده باشند). |
+| `-i` | `--iran` | اعمال بهینه‌سازی‌های ایران: تنظیم timezone به `Asia/Tehran`، افزودن WAN DNS به `5.200.200.200`، حل مشکل DNS Rebinding پورتال اپراتورها (`my.irancell.ir`, `my.mci.ir`, `login.tci.ir`) و پچ کردن بنر استاتوس Passwall. |
+| `-rw` | `--root-wifi` | تنظیم پسورد root SSH و وای‌فای 2.4GHz/5GHz به `123456789`. |
+| `-rb` | `--reset-button` | بازپیکربندی دکمه ریست سخت‌افزاری: فشردن ۱ ثانیه‌ای برای reboot روتر؛ فشردن ۵ ثانیه‌ای برای پاک کردن پسورد root (`passwd -d root`). |
+| `-h` | `--help` | نمایش help و راهنمای سوییچ‌های اسکریپت. |
 
 ---
 
-## 💡 دستورالعمل‌های پیشنهادی نصب
+## 💡 Recommended Installation Recipes
 
-### ۱. نصب پیشنهادی برای ایران (سرعت و پایداری بالا)
-استفاده از میرور ایرانی گیت‌هاب، نصب تمیز پکیج‌ها، تنظیم کلمه عبور وای‌فای/روت و اعمال بهینه‌سازی‌های منطقه‌ای:
+### 1. تنظیمات پیشنهادی برای ایران (سرعت و پایداری بالا)
+استفاده از میرور ایرانی GitHub، نصب clean، تنظیم پسورد root/Wi-Fi و اعمال بهینه‌سازی‌های ایران:
 ```bash
 sh /tmp/set.sh -gm -c -rw -i
 ```
 
-### ۲. نصب تمیز از گیت‌هاب رسمی
-دانلود آخرین نسخه هسته‌ها مستقیماً از گیت‌هاب رسمی و اجرای نصب تمیز:
+### 2. Clean Install از GitHub Releases رسمی
+دانلود مستقیم آخرین release binaryها از GitHub و اجرای clean reinstall:
 ```bash
 sh /tmp/set.sh -g -c
 ```
 
-### ۳. نصب یک نسخه خاص
-نصب نسخه مشخص (مثلاً `26.8.17-1`) از طریق میرور ایران:
+### 3. نصب یک Release Version مشخص
+نصب یک نسخه خاص (مثلاً `26.8.17-1`) از طریق میرور ایران:
 ```bash
 sh /tmp/set.sh -gm 26.8.17-1 -c
 ```
 
-### ۴. نصب کم‌حجم Sing-Box (مناسب روترهای با فضای محدود)
-نصب فقط هسته `sing-box` و پایگاه‌های داده جیو، جهت صرفه‌جویی حداکثری در فضای حافظه overlay:
+### 4. Minimal Sing-Box Install (مناسب روترهای با فضای ذخیره‌سازی محدود)
+نصب فقط هسته `sing-box` و geo-databaseهای لازم جهت باقی ماندن حداکثر فضای خالی روی پارتیشن overlay:
 ```bash
 sh /tmp/set.sh -s -c
 ```
 
-### ۵. نصب کامل تمامی ابزارها و پروتکل‌ها
-نصب تمام هسته‌ها و ابزارهای پشتیبانی‌شده (Hysteria, NaiveProxy, HAProxy, ChinaDNS-NG و ...):
+### 5. Full Feature Stack Installation
+نصب تمامی هسته‌ها و ابزارهای پشتیبانی‌شده (Hysteria, NaiveProxy, HAProxy, ChinaDNS-NG و ...):
 ```bash
 sh /tmp/set.sh -f -c
 ```
 
 ---
 
-## 📋 پیش‌نیازهای سیستم
+## 📋 System Requirements
 
-- **سیستم‌عامل پشتیبانی‌شده:** OpenWrt (نسخه‌های رسمی Stable؛ نسخه‌های Snapshot پشتیبانی نمی‌شوند).
-- **معماری‌ها:** `x86_64`, `aarch64_cortex-a53`, `aarch64_cortex-a72`, `aarch64_generic`, `arm_cortex-a7`, `arm_cortex-a15`, `mipsel_24kc`, `mips_24kc` و غیره.
+- **Supported OS:** OpenWrt (بیلدهای رسمی Release؛ بیلدهای Snapshot پشتیبانی نمی‌شوند).
+- **Architecture:** `x86_64`, `aarch64_cortex-a53`, `aarch64_cortex-a72`, `aarch64_generic`, `arm_cortex-a7`, `arm_cortex-a15`, `mipsel_24kc`, `mips_24kc` و غیره.
 - **حداقل مشخصات سخت‌افزاری:**
-  - **حافظه فلش (Flash):** ۱۲۸ مگابایت (حداقل ۶۰ مگابایت فضای خالی روی Overlay)
-  - **حافظه رم (RAM):** ۲۵۶ مگابایت
+  - **Flash:** 128 MB (حداقل 60 MB+ فضای خالی در overlay)
+  - **RAM:** 256 MB
 
 > [!NOTE]
-> **روتر شیائومی AX3000T و دستگاه‌های با فضای محدود:**
-> پارتیشن‌بندی پیش‌فرض در شیائومی AX3000T حدود ۶۰ مگابایت فضای overlay ارائه می‌دهد. این اسکریپت بهینه‌سازی شده است تا در این فضا به‌خوبی کار کند. برای بهترین نتیجه، از حالت کم‌حجم sing-box (`-s`) استفاده کنید یا با نصب UBoot سفارشی، فضای overlay را به حدود ۸۵ مگابایت افزایش دهید.
+> **Xiaomi AX3000T & دستگاه‌های با حافظه محدود:**
+> پارتیشن‌بندی فابریک Xiaomi AX3000T فضایی حدود 60 MB برای overlay فراهم می‌کند. این اسکریپت برای اجرا در این فضا بهینه‌سازی شده است. برای بهترین نتیجه، از حالت minimal sing-box (`-s`) استفاده کنید یا با فلش UBoot سفارشی، فضای overlay را به حدود 85 MB افزایش دهید.
 
 ---
 
-## 🛠️ قابلیت‌های بازیابی و ایمنی
+## 🛠️ Recovery & Safety Features
 
-- **پشتیبان‌گیری از تنظیمات (Backup):** تنظیمات موجود Passwall در `/etc/config/passwall2*` پیش از اعمال تغییرات، به‌طور خودکار با پسوند تاریخ‌دار `.bak` پشتیبان‌گیری می‌شوند.
-- **بازنشانی سخت‌افزاری اضطراری (`-rb`):** در صورت قطع دسترسی SSH، نگه داشتن دکمه ریست فیزیکی به مدت ۵ ثانیه کلمه عبور root را پاک می‌کند بدون اینکه تنظیمات شبکه یا پکیج‌های نصب‌شده حذف شوند.
-- **بررسی فضای خالی و راهنمای پاکسازی:** اسکریپت پیش از دانلود، فضای `/tmp` را بررسی کرده و در صورت کمبود فضا، راهکارهای پاکسازی ارائه می‌دهد.
+- **Configuration Backup:** تنظیمات موجود Passwall در `/etc/config/passwall2*` قبل از اعمال تغییرات، به طور خودکار با پسوند تاریخ‌دار `.bak` بکاپ گرفته می‌شوند.
+- **Emergency Hardware Reset (`-rb`):** در صورت قطع دسترسی SSH، نگه داشتن دکمه ریست فیزیکی دستگاه به مدت ۵ ثانیه پسورد root را پاک می‌کند بدون اینکه تنظیمات شبکه یا پکیج‌های نصب‌شده پاک شوند.
+- **Space Check & Cleanup Advice:** اسکریپت قبل از دانلود پکیج‌ها فضای `/tmp` را چک کرده و در صورت کمبود فضا راهکارهای disk cleanup ارائه می‌دهد.
 
 ---
 
-## 📄 مجوز و قدردانی
+## 📄 License & Attribution
 
-- **نگهدارنده اسکریپت:** [sadraimam](https://github.com/sadraimam)
-- **پروژه اصلی Passwall2:** [Openwrt-Passwall/openwrt-passwall2](https://github.com/Openwrt-Passwall/openwrt-passwall2)
-- **ارائه‌دهنده میرور ایران:** [scorpian.ir](https://scorpian.ir/repos/Openwrt-Passwall/openwrt-passwall2)
+- **Script Maintainer:** [sadraimam](https://github.com/sadraimam)
+- **Passwall2 Upstream Project:** [Openwrt-Passwall/openwrt-passwall2](https://github.com/Openwrt-Passwall/openwrt-passwall2)
+- **Iranian Mirror Provider:** [scorpian.ir](https://scorpian.ir/repos/Openwrt-Passwall/openwrt-passwall2)
+
+</div>
