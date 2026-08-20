@@ -27,7 +27,7 @@ Designed to handle package management variations across OpenWrt versions, automa
 Run the automated installer via SSH on your OpenWrt router:
 
 ```bash
-rm -f /tmp/set.sh && wget -O /tmp/set.sh https://raw.githubusercontent.com/sadraimam/ax3000t/refs/heads/main/set.sh && chmod +x /tmp/set.sh && sh /tmp/set.sh
+rm -f /tmp/set.sh && wget -O /tmp/set.sh https://raw.githubusercontent.com/sadraimam/auto_passwall2/refs/heads/main/set.sh && chmod +x /tmp/set.sh && sh /tmp/set.sh
 ```
 
 ---
