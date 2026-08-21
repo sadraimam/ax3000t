@@ -112,3 +112,4 @@ sh /tmp/set.sh -f -c
 - **Script Maintainer:** [sadraimam](https://github.com/sadraimam)
 - **Passwall2 Upstream Project:** [Openwrt-Passwall/openwrt-passwall2](https://github.com/Openwrt-Passwall/openwrt-passwall2)
 - **Iranian Mirror Provider:** [scorpian.ir](https://scorpian.ir/repos/Openwrt-Passwall/openwrt-passwall2)
+- **Thanks to: [enxy0](https://github.com/enxy0/passwall2_install)
